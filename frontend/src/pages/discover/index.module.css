@@ -1,21 +1,239 @@
-.allUserProfile {
-  max-width: 80%;
-  align-items: center;
+/* Page Structure */
+.pageWrapper {
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: 1.6rem;
 }
-
-.userCard {
+.pageHeader {
   display: flex;
-  gap: 1.2rem;
-  padding: 1.3rem;
-  align-items: center;
-  box-shadow: 10px 10px 10px 0px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
+  flex-direction: column;
+  gap: 1rem;
+}
+.title {
+  margin: 0;
+  font-size: 1.4rem;
+  background: linear-gradient(120deg, #b12167, #d8476d, #ffb37a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: 0.6px;
+  font-weight: 700;
+}
+.subtitle {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #664255;
+  max-width: 600px;
+  line-height: 1.4;
 }
 
-.userCard__image {
-  width: 10%;
+/* Controls */
+.controlsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  align-items: center;
+}
+.searchBoxWrapper {
+  position: relative;
+  flex: 1 1 260px;
+  /* max-width: 90%; */
+}
+.searchInput {
+  width: 100%;
+  padding: 0.75rem 2.4rem 0.75rem 0.95rem;
+  border: 1.5px solid #f3d8e4;
+  border-radius: 16px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.75rem;
+  outline: none;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+.searchInput:focus {
+  border-color: #b12167;
+  box-shadow: 0 0 0 3px rgba(177, 33, 103, 0.18);
+}
+.clearSearchBtn {
+  position: absolute;
+  right: 0.4rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #fce8f2;
+  border: 1px solid #f3d8e4;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  color: #a3185a;
+  font-size: 0;
+  transition: background 0.25s, box-shadow 0.25s, color 0.25s,
+    border-color 0.25s;
+}
+.clearSearchBtn:hover {
+  background: #ffd6e7;
+  box-shadow: 0 0 0 3px rgba(177, 33, 103, 0.18);
+}
+.clearSearchBtn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(177, 33, 103, 0.35);
+  background: #ffe0ef;
+}
+.clearSearchBtn:active {
+  background: #ffc9e0;
+  transform: translateY(-50%) scale(0.9);
+}
+.clearIcon {
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+.filterToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  background: #fff;
+  border: 1px solid #f3d8e4;
+  padding: 0.6rem 0.8rem;
+  border-radius: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+.filterToggle input {
+  accent-color: #b12167;
+}
+
+/* Grid */
+.usersGrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 1rem;
+}
+
+/* Card */
+.userCard {
+  list-style: none;
+}
+.userCardBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #f3d8e4;
+  padding: 0.85rem 0.85rem 0.85rem 0.75rem;
+  border-radius: 22px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.25s, box-shadow 0.25s, transform 0.25s,
+    border-color 0.25s;
+}
+.userCardBtn:hover {
+  background: #fff5f9;
+  box-shadow: 0 6px 20px -10px rgba(177, 33, 103, 0.25);
+  transform: translateY(-3px);
+}
+.avatarWrap {
+  width: 54px;
+  height: 54px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 4px 14px -8px rgba(177, 33, 103, 0.4);
+  background: #fff;
+  display: block;
+}
+.avatarWrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.userMeta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+.userName {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: #36252c;
+}
+.userHandle {
+  font-size: 0.58rem;
+  color: #7a5a65;
+  margin-top: 0.2rem;
+}
+.viewChevron {
+  margin-left: auto;
+  display: inline-flex;
+  width: 26px;
+  height: 26px;
+  border: 1px solid #f3d8e4;
+  border-radius: 12px;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  color: #b12167;
+  transition: background 0.25s, color 0.25s, border-color 0.25s;
+}
+.userCardBtn:hover .viewChevron {
+  background: linear-gradient(120deg, #b12167, #d8476d, #ffb37a);
+  color: #fff;
+  border-color: transparent;
+}
+
+/* Empty / Loading */
+.emptyState {
+  text-align: center;
+  padding: 3rem 1rem;
+  font-size: 0.75rem;
+  color: #775667;
+  background: #fff;
+  border: 1px dashed #f3d8e4;
+  border-radius: 24px;
+}
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 1rem;
+}
+.userSkeleton {
+  height: 92px;
+  border-radius: 22px;
+  background: linear-gradient(90deg, #f8eaf1, #fef5fa, #f8eaf1);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+  border: 1px solid #f3d8e4;
+}
+@keyframes shimmer {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Responsive tweaks */
+@media (max-width: 620px) {
+  .controlsRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filterToggle {
+    width: fit-content;
+  }
 }

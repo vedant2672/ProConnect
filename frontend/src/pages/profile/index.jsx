@@ -1,7 +1,7 @@
 import { getAboutUser } from "@/config/redux/action/authAction";
 import DashboardLayout from "@/layout/DashboardLayout";
 import UserLayout from "@/layout/UserLayout";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import styles from "./index.module.css";
@@ -13,8 +13,10 @@ export default function ProfilePage() {
   const postReducer = useSelector((state) => state.postReducer);
 
   const [userProfile, setUserProfile] = useState({});
-
   const [userPosts, setUserPosts] = useState([]);
+  const [initialSnapshot, setInitialSnapshot] = useState(null);
+  const [saving, setSaving] = useState(false);
+  // Reverted: no tabbed interface
 
   const dispatch = useDispatch();
 
@@ -74,17 +76,16 @@ export default function ProfilePage() {
   useEffect(() => {
     dispatch(getAboutUser({ token: localStorage.getItem("token") }));
     dispatch(getAllPosts());
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
-    if (authState.user != undefined) {
+    if (authState.user) {
       setUserProfile(authState.user);
-
-      let post = postReducer.posts.filter((post) => {
-        return post.userId.username === authState.user.userId.username;
-      });
-
-      setUserPosts(post);
+      setInitialSnapshot(authState.user);
+      const postsForUser = postReducer.posts.filter(
+        (post) => post.userId.username === authState.user.userId.username
+      );
+      setUserPosts(postsForUser);
     }
   }, [authState.user, postReducer.posts]);
 
@@ -106,21 +107,69 @@ export default function ProfilePage() {
     dispatch(getAboutUser({ token: localStorage.getItem("token") }));
   };
 
+  const hasChanges = useMemo(() => {
+    if (!initialSnapshot || !userProfile.userId) return false;
+    try {
+      const fields = (["bio", "currentPost", "pastWork", "education"], []);
+      // Simple shallow compare relevant editable fields and name
+      const orig = initialSnapshot;
+      if (orig.userId.name !== userProfile.userId.name) return true;
+      if ((orig.bio || "") !== (userProfile.bio || "")) return true;
+      const pwChanged =
+        JSON.stringify(orig.pastWork || []) !==
+        JSON.stringify(userProfile.pastWork || []);
+      if (pwChanged) return true;
+      const eduChanged =
+        JSON.stringify(orig.education || []) !==
+        JSON.stringify(userProfile.education || []);
+      if (eduChanged) return true;
+      return false;
+    } catch (e) {
+      return true;
+    }
+  }, [initialSnapshot, userProfile]);
+
   const updateProfileData = async () => {
-    const request = await clientServer.post("/user_update", {
-      token: localStorage.getItem("token"),
-      name: userProfile.userId.name,
-    });
+    if (!userProfile.userId) return;
+    setSaving(true);
+    try {
+      await clientServer.post("/user_update", {
+        token: localStorage.getItem("token"),
+        name: userProfile.userId.name,
+      });
+      await clientServer.post("/update_profile_data", {
+        token: localStorage.getItem("token"),
+        bio: userProfile.bio,
+        currentPost: userProfile.currentPost,
+        pastWork: userProfile.pastWork,
+        education: userProfile.education,
+      });
+      await dispatch(getAboutUser({ token: localStorage.getItem("token") }));
+    } finally {
+      setSaving(false);
+    }
+  };
 
-    const response = await clientServer.post("/update_profile_data", {
-      token: localStorage.getItem("token"),
-      bio: userProfile.bio,
-      currentPost: userProfile.currentPost,
-      pastWork: userProfile.pastWork,
-      education: userProfile.education,
-    });
-
-    dispatch(getAboutUser({ token: localStorage.getItem("token") }));
+  const downloadResume = async () => {
+    if (!userProfile.userId?._id) return;
+    try {
+      // Fetch generated PDF name
+      const res = await clientServer.get(
+        `/user/download_resume?id=${userProfile.userId._id}`
+      );
+      const filename = res.data?.message;
+      if (!filename) return;
+      // Create a temporary link to trigger download
+      const url = `${BASE_URL}/${filename}`;
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `resume_${userProfile.userId.username}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (e) {
+      console.error("Resume download failed", e);
+    }
   };
 
   return (
@@ -128,241 +177,339 @@ export default function ProfilePage() {
       <DashboardLayout>
         {authState.user && userProfile.userId && (
           <div className={styles.container}>
-            <div className={styles.backDropContainer}>
-              <label
-                htmlFor="profilePictureUpload"
-                className={styles.backDrop__overlay}
-              >
-                <p>Edit</p>
-              </label>
-              <input
-                onChange={(e) => {
-                  updateProfilePicture(e.target.files[0]);
-                }}
-                hidden
-                type="file"
-                id="profilePictureUpload"
-              />
-              <img
-                src={`${BASE_URL}/${userProfile.userId.profilePicture}`}
-                alt="backdrop"
-              />
+            {/* Banner & Avatar */}
+            <div className={styles.banner}>
+              <div className={styles.bannerInner}>
+                <label
+                  htmlFor="profilePictureUpload"
+                  className={styles.avatarEdit}
+                >
+                  <span className={styles.avatarEditText}>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className={styles.avatarEditIcon}
+                      aria-hidden="true"
+                    >
+                      <path d="M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+                      <path d="M16.5 6h-1.38a2 2 0 0 1-1.788-1.106l-.764-1.528A1 1 0 0 0 11.69 3h-.38a1 1 0 0 0-.89.366L9.656 4.894A2 2 0 0 1 7.868 6H6.5A2.5 2.5 0 0 0 4 8.5v7A2.5 2.5 0 0 0 6.5 18h10A2.5 2.5 0 0 0 19 15.5v-7A2.5 2.5 0 0 0 16.5 6Z" />
+                    </svg>
+                    <span>Change</span>
+                  </span>
+                  <input
+                    onChange={(e) => {
+                      if (e.target.files?.[0])
+                        updateProfilePicture(e.target.files[0]);
+                    }}
+                    hidden
+                    type="file"
+                    id="profilePictureUpload"
+                    accept="image/*"
+                  />
+                  <img
+                    src={`${BASE_URL}/${userProfile.userId.profilePicture}`}
+                    alt="Profile avatar"
+                    className={styles.avatarImg}
+                  />
+                </label>
+                <div className={styles.bannerGradient} />
+              </div>
             </div>
 
-            <div className={styles.profileContainer__details}>
-              <div style={{ display: "flex", gap: "0.7rem" }}>
-                <div style={{ flex: "0.8" }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      width: "fit-content",
-                      alignItems: "center",
-                      gap: "1.2rem",
-                    }}
-                  >
+            {/* Header Content */}
+            <section className={styles.headerSection}>
+              <div className={styles.headerGrid}>
+                <div className={styles.primaryCol}>
+                  <div className={styles.nameRow}>
                     <input
-                      className={styles.nameEdit}
+                      className={styles.nameInput}
                       type="text"
                       value={userProfile.userId.name}
-                      onChange={(e) => {
+                      onChange={(e) =>
                         setUserProfile({
                           ...userProfile,
                           userId: {
                             ...userProfile.userId,
                             name: e.target.value,
                           },
-                        });
-                      }}
+                        })
+                      }
+                      aria-label="Edit your name"
                     />
-                    <p style={{ color: "grey" }}>
+                    <span className={styles.handle}>
                       @{userProfile.userId.username}
-                    </p>
+                    </span>
                   </div>
-                  <div>
+                  <div className={styles.bioBlock}>
                     <textarea
-                      value={userProfile.bio}
-                      onChange={(e) => {
-                        setUserProfile({
-                          ...userProfile,
-                          bio: e.target.value,
-                        });
-                      }}
-                      rows={Math.max(3, Math.ceil(userProfile.bio.length / 80))}
-                      style={{ width: "100%" }}
+                      className={styles.bioTextarea}
+                      value={userProfile.bio || ""}
+                      placeholder="Add a short bio about yourself..."
+                      onChange={(e) =>
+                        setUserProfile({ ...userProfile, bio: e.target.value })
+                      }
+                      rows={Math.max(
+                        3,
+                        Math.ceil((userProfile.bio || "").length / 80)
+                      )}
+                      aria-label="Edit your bio"
                     />
                   </div>
-                </div>
-                <div style={{ flex: "0.2" }}>
-                  <h3>Recent Activity</h3>
-                  {userPosts.map((post) => {
-                    return (
-                      <div key={post._id} className={styles.postCard}>
-                        <div className={styles.card}>
-                          <div className={styles.card__profileContainer}>
-                            {post.media !== "" ? (
-                              <img
-                                src={`${BASE_URL}/${post.media}`}
-                                alt="post media"
-                              />
-                            ) : (
-                              <div style={{ width: "3.4em", height: "3.4em" }}>
-                                {" "}
-                              </div>
-                            )}
-                          </div>
-                          <p>{post.body}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <div className="workHistory">
-              <h4>Work History</h4>
-
-              <div className={styles.workHistoryContainer}>
-                {(userProfile.pastWork || []).map((work, index) => {
-                  return (
-                    <div key={index} className={styles.workHistoryCard}>
-                      <p
-                        style={{
-                          fontWeight: "bold",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.8rem",
-                        }}
-                      >
-                        {work.company} - {work.position}
-                      </p>
-                      <p>{work.years}</p>
+                  <div className={styles.statsRow}>
+                    <div className={styles.statCard}>
+                      <span className={styles.statNumber}>
+                        {userPosts.length}
+                      </span>
+                      <span className={styles.statLabel}>Posts</span>
                     </div>
-                  );
-                })}
+                    <div className={styles.statCard}>
+                      <span className={styles.statNumber}>
+                        {(userProfile.pastWork || []).length}
+                      </span>
+                      <span className={styles.statLabel}>Work</span>
+                    </div>
+                    <div className={styles.statCard}>
+                      <span className={styles.statNumber}>
+                        {(userProfile.education || []).length}
+                      </span>
+                      <span className={styles.statLabel}>Education</span>
+                    </div>
+                  </div>
+                  {/* Save Changes button moved to bottomActions */}
+                  <button
+                    type="button"
+                    onClick={downloadResume}
+                    className={styles.downloadResumeBtn}
+                    aria-label="Download resume PDF"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className={styles.downloadIcon}
+                      aria-hidden="true"
+                    >
+                      <path d="M12 3v14" />
+                      <path d="m6 11 6 6 6-6" />
+                      <path d="M5 21h14" />
+                    </svg>
+                    <span>Download Resume</span>
+                  </button>
+                  {/* Tabs removed */}
+                </div>
+                <aside className={styles.activityCol}>
+                  <h3 className={styles.sectionHeading}>Recent Activity</h3>
+                  <ul className={styles.activityList}>
+                    {userPosts.slice(0, 6).map((post) => (
+                      <li key={post._id} className={styles.activityItem}>
+                        {post.media && (
+                          <span className={styles.activityMediaWrap}>
+                            <img src={`${BASE_URL}/${post.media}`} alt="" />
+                          </span>
+                        )}
+                        <p className={styles.activityBody}>{post.body}</p>
+                      </li>
+                    ))}
+                    {userPosts.length === 0 && (
+                      <li className={styles.activityEmpty}>No posts yet.</li>
+                    )}
+                  </ul>
+                </aside>
+              </div>
+            </section>
+
+            {/* Work History */}
+            <section className={styles.sectionCard}>
+              <div className={styles.sectionHeader}>
+                <h4 className={styles.sectionTitle}>Work History</h4>
                 <button
-                  className={styles.addWorkBtn}
+                  type="button"
                   onClick={() => openModal("work")}
+                  className={styles.sectionAddBtn}
                 >
-                  Add Work
+                  Add
                 </button>
               </div>
-            </div>
-            <div className="education">
-              <h4>Education</h4>
+              <div className={styles.tagsWrap}>
+                {(userProfile.pastWork || []).map((work, i) => (
+                  <div key={i} className={styles.tagCard}>
+                    <strong>{work.company}</strong>
+                    <span className={styles.tagSub}>{work.position}</span>
+                    <span className={styles.tagMeta}>{work.years}</span>
+                  </div>
+                ))}
+                {(userProfile.pastWork || []).length === 0 && (
+                  <p className={styles.emptyInline}>No work added yet.</p>
+                )}
+              </div>
+            </section>
 
-              <div className={styles.workHistoryContainer}>
-                {(userProfile.education || []).map((education, index) => {
-                  return (
-                    <div key={index} className={styles.workHistoryCard}>
-                      <p
-                        style={{
-                          fontWeight: "bold",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.8rem",
-                        }}
-                      >
-                        {education.degree} - {education.fieldOfStudy}
-                      </p>
-                      <p>{education.school}</p>
-                    </div>
-                  );
-                })}
+            {/* Education */}
+            <section className={styles.sectionCard}>
+              <div className={styles.sectionHeader}>
+                <h4 className={styles.sectionTitle}>Education</h4>
                 <button
-                  className={styles.addWorkBtn}
+                  type="button"
                   onClick={() => openModal("education")}
+                  className={styles.sectionAddBtn}
                 >
-                  Add Education
+                  Add
                 </button>
               </div>
-            </div>
-
-            {userProfile != authState.user && (
-              <div
-                onClick={() => {
-                  updateProfileData();
-                }}
-                className={styles.updateProfileBtn}
-              >
-                Update Profile{" "}
+              <div className={styles.tagsWrap}>
+                {(userProfile.education || []).map((ed, i) => (
+                  <div key={i} className={styles.tagCard}>
+                    <strong>{ed.degree}</strong>
+                    <span className={styles.tagSub}>{ed.fieldOfStudy}</span>
+                    <span className={styles.tagMeta}>{ed.school}</span>
+                  </div>
+                ))}
+                {(userProfile.education || []).length === 0 && (
+                  <p className={styles.emptyInline}>No education added yet.</p>
+                )}
+              </div>
+            </section>
+            {hasChanges && (
+              <div className={styles.bottomActions}>
+                <button
+                  type="button"
+                  className={styles.saveChangesBtn}
+                  disabled={saving}
+                  onClick={updateProfileData}
+                >
+                  {saving ? "Saving..." : "Save Changes"}
+                </button>
               </div>
             )}
           </div>
         )}
 
         {isModalOpen && (
-          <div onClick={closeModal} className={styles.commentsContainer}>
+          <div
+            className={styles.modalOverlay}
+            role="dialog"
+            aria-modal="true"
+            onClick={closeModal}
+          >
             <div
+              className={styles.modalCard}
               onClick={(e) => e.stopPropagation()}
-              className={styles.allCommentsContainer}
             >
-              {modalType === "work" && (
-                <>
-                  <input
-                    onChange={handleWorkChange}
-                    name="company"
-                    value={workInput.company}
-                    className={styles.inputField}
-                    type="text"
-                    placeholder="Company"
-                  />
-                  <input
-                    onChange={handleWorkChange}
-                    name="position"
-                    value={workInput.position}
-                    className={styles.inputField}
-                    type="text"
-                    placeholder="Position"
-                  />
-                  <input
-                    onChange={handleWorkChange}
-                    name="years"
-                    value={workInput.years}
-                    className={styles.inputField}
-                    type="number"
-                    placeholder="Years"
-                  />
-                  <div onClick={addWork} className={styles.updateProfileBtn}>
+              <div className={styles.modalHeader}>
+                <h3 className={styles.modalTitle}>
+                  {modalType === "work" ? "Add Work" : "Add Education"}
+                </h3>
+                <button
+                  type="button"
+                  className={styles.modalClose}
+                  onClick={closeModal}
+                  aria-label="Close"
+                >
+                  ×
+                </button>
+              </div>
+              <div className={styles.modalBody}>
+                {modalType === "work" && (
+                  <>
+                    <input
+                      onChange={handleWorkChange}
+                      name="company"
+                      value={workInput.company}
+                      className={styles.inputField}
+                      type="text"
+                      placeholder="Company"
+                    />
+                    <input
+                      onChange={handleWorkChange}
+                      name="position"
+                      value={workInput.position}
+                      className={styles.inputField}
+                      type="text"
+                      placeholder="Position"
+                    />
+                    <input
+                      onChange={handleWorkChange}
+                      name="years"
+                      value={workInput.years}
+                      className={styles.inputField}
+                      type="text"
+                      placeholder="Years (e.g. 2021-2024)"
+                    />
+                  </>
+                )}
+                {modalType === "education" && (
+                  <>
+                    <input
+                      onChange={handleEducationChange}
+                      name="school"
+                      value={educationInput.school}
+                      className={styles.inputField}
+                      type="text"
+                      placeholder="School"
+                    />
+                    <input
+                      onChange={handleEducationChange}
+                      name="degree"
+                      value={educationInput.degree}
+                      className={styles.inputField}
+                      type="text"
+                      placeholder="Degree"
+                    />
+                    <input
+                      onChange={handleEducationChange}
+                      name="fieldOfStudy"
+                      value={educationInput.fieldOfStudy}
+                      className={styles.inputField}
+                      type="text"
+                      placeholder="Field of Study"
+                    />
+                    <input
+                      onChange={handleEducationChange}
+                      name="years"
+                      value={educationInput.years}
+                      className={styles.inputField}
+                      type="text"
+                      placeholder="Years (e.g. 2019-2023)"
+                    />
+                  </>
+                )}
+              </div>
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  className={styles.secondaryBtn}
+                  onClick={closeModal}
+                >
+                  Cancel
+                </button>
+                {modalType === "work" && (
+                  <button
+                    type="button"
+                    className={styles.primaryBtn}
+                    onClick={addWork}
+                  >
                     Add Work
-                  </div>
-                </>
-              )}
-              {modalType === "education" && (
-                <>
-                  <input
-                    onChange={handleEducationChange}
-                    name="school"
-                    value={educationInput.school}
-                    className={styles.inputField}
-                    type="text"
-                    placeholder="School"
-                  />
-                  <input
-                    onChange={handleEducationChange}
-                    name="degree"
-                    value={educationInput.degree}
-                    className={styles.inputField}
-                    type="text"
-                    placeholder="Degree"
-                  />
-                  <input
-                    onChange={handleEducationChange}
-                    name="fieldOfStudy"
-                    value={educationInput.fieldOfStudy}
-                    className={styles.inputField}
-                    type="text"
-                    placeholder="Field of Study"
-                  />
-
-                  <div
+                  </button>
+                )}
+                {modalType === "education" && (
+                  <button
+                    type="button"
+                    className={styles.primaryBtn}
                     onClick={addEducation}
-                    className={styles.updateProfileBtn}
                   >
                     Add Education
-                  </div>
-                </>
-              )}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}

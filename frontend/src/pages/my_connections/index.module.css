@@ -1,32 +1,347 @@
-.userCard {
+/* Container & Layout */
+.container {
   display: flex;
+  flex-direction: column;
+  gap: 2.4rem;
   width: 100%;
-  gap: 1.2rem;
-  padding: 1.3rem;
+}
+
+.headerRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
   align-items: center;
-  box-shadow: 10px 10px 10px 0px rgba(0, 0, 0, 0.1);
+  justify-content: space-between;
 }
 
-.profilePicture > img {
-  width: 6.5rem;
-  border-radius: 50%;
-}
-
-.myConnections {
+.titleGroup {
   display: flex;
-  width: 100%;
-  justify-content: space-around;
-  padding-bottom: 1.5rem;
-  cursor: pointer;
+  align-items: center;
+  gap: 0.75rem;
+}
+.title {
+  margin: 0;
+  font-size: 1.9rem;
+}
+.badge {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: #fff;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  font-weight: 500;
+  min-width: 2.2rem;
+  text-align: center;
+}
+.subBadge {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: #fff;
+  font-size: 0.7rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  font-weight: 500;
+  min-width: 1.6rem;
+  text-align: center;
 }
 
-.connectedButton {
-  padding-inline: 0.8rem;
-  padding-block: 0.3rem;
-  background: white;
+.searchWrapper {
+  position: relative;
+  flex: 1;
+  min-width: 240px;
+}
+.searchInput {
+  width: 100%;
+  padding: 0.75rem 2.5rem 0.75rem 0.95rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.12),
+    rgba(255, 255, 255, 0.05)
+  );
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  color: black;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.25px;
+  transition: border 0.25s, box-shadow 0.25s, background 0.25s;
+  box-shadow: 0 2px 6px -2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+}
+.searchInput::placeholder {
+  /* Modern browsers */
+  color: rgba(0, 0, 0, 0.55);
+  font-weight: 400;
+  letter-spacing: 0.2px;
+}
+/* Vendor placeholders for broader support */
+.searchInput::-webkit-input-placeholder {
+  color: rgba(0, 0, 0, 0.55);
+}
+.searchInput:-ms-input-placeholder {
+  color: rgba(0, 0, 0, 0.55);
+}
+.searchInput::-ms-input-placeholder {
+  color: rgba(0, 0, 0, 0.55);
+}
+.searchInput:-moz-placeholder {
+  color: rgba(0, 0, 0, 0.55);
+  opacity: 1;
+}
+.searchInput::-moz-placeholder {
+  color: rgba(0, 0, 0, 0.55);
+  opacity: 1;
+}
+.searchInput:focus {
   outline: none;
-  border: 1px solid rgba(3, 93, 183, 0.905);
-  color: rgba(3, 93, 183, 0.905);
-  border-radius: 10px;
+  border-color: rgba(59, 130, 246, 0.8);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.45),
+    0 6px 16px -4px rgba(0, 0, 0, 0.55);
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.18),
+    rgba(37, 99, 235, 0.15),
+    rgba(255, 255, 255, 0.05)
+  );
+}
+.clearSearch {
+  position: absolute;
+  right: 0.55rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  border: none;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
   cursor: pointer;
+  color: #fff;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: filter 0.25s, transform 0.25s;
+  box-shadow: 0 4px 10px -3px rgba(0, 0, 0, 0.5);
+}
+.clearSearch:hover {
+  filter: brightness(1.12);
+  transform: scale(1.05);
+}
+.clearSearch:active {
+  transform: scale(0.92);
+}
+
+/* Section */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.sectionHeader h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+/* Pending Requests List */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.userCard {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.05)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(14px);
+  cursor: pointer;
+  transition: background 0.3s, transform 0.3s, border-color 0.3s;
+}
+.userCard:hover {
+  background: rgba(255, 255, 255, 0.16);
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.avatarWrapper {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+}
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.userInfo h4 {
+  margin: 0 0 0.15rem;
+  font-size: 1.05rem;
+}
+.userInfo p {
+  margin: 0;
+  opacity: 0.75;
+  font-size: 0.8rem;
+}
+
+.requestActions {
+  margin-left: auto;
+  display: flex;
+  gap: 0.55rem;
+}
+.acceptBtn,
+.declineBtn {
+  font-size: 0.75rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  transition: background 0.25s, color 0.25s, border-color 0.25s;
+}
+.acceptBtn {
+  background: linear-gradient(135deg, #15803d, #16a34a);
+  color: #fff;
+}
+.acceptBtn:hover {
+  filter: brightness(1.1);
+}
+.declineBtn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.4);
+}
+.declineBtn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* Network Grid */
+.grid {
+  display: grid;
+  gap: 1.2rem;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+
+.networkCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 1.2rem 1rem 1.3rem;
+  border-radius: 22px;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.11),
+    rgba(255, 255, 255, 0.06)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.3s, transform 0.3s, border-color 0.3s,
+    box-shadow 0.3s;
+}
+.networkCard:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 18px -8px rgba(0, 0, 0, 0.35);
+}
+
+.networkAvatar {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35),
+    0 0 0 3px rgba(255, 255, 255, 0.15);
+}
+.networkAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.networkName {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.networkUsername {
+  margin: 0;
+  opacity: 0.7;
+  font-size: 0.7rem;
+  letter-spacing: 0.4px;
+}
+
+/* Empty & Skeleton */
+.emptyText {
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+.skeletonList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.skeletonCard {
+  height: 70px;
+  border-radius: 18px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.08) 25%,
+    rgba(255, 255, 255, 0.17) 50%,
+    rgba(255, 255, 255, 0.08) 75%
+  );
+  background-size: 400% 100%;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: -400% 0;
+  }
+}
+
+/* Responsive */
+@media (max-width: 780px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+  .title {
+    font-size: 1.6rem;
+  }
+  .networkCard {
+    padding: 1rem 0.8rem 1.1rem;
+  }
+  .networkAvatar {
+    width: 64px;
+    height: 64px;
+  }
 }

@@ -1,20 +1,319 @@
-.container {
-  padding: 1.2rem;
+/* Wrapper / positioning */
+.wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.72);
+  border-bottom: 1px solid rgba(177, 33, 103, 0.08);
 }
 
+/* Navbar core layout */
 .navbar {
+  max-width: 1280px;
+  margin: 0 auto;
   display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: 1.6rem;
+  padding: 0.85rem 1.2rem;
+  font-family: "Poppins", system-ui, sans-serif;
+}
+
+.leftGroup {
+  display: flex;
   align-items: center;
 }
+.centerGroup {
+  display: none;
+}
+.rightGroup {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
 
-.buttonJoin {
-  background-color: #cd8987;
-  border-radius: 10px;
-  padding-block: 0.6rem;
-  padding-inline: 1.2rem;
-  color: white;
-  font-size: 0.7rem;
+/* Brand */
+.brand {
+  font-size: 1.28rem;
+  font-weight: 700;
+  background: none;
+  border: none;
+  padding: 0;
   cursor: pointer;
-  font-weight: bold;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  position: relative;
+}
+
+.brandBadge {
+  background: linear-gradient(120deg, #b12167, #f6d365 85%);
+  padding: 0.3rem 0.6rem 0.35rem;
+  line-height: 1;
+  color: #fff;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 14px -6px rgba(177, 33, 103, 0.55);
+  position: relative;
+  overflow: hidden;
+}
+.brandBadge:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 30% 20%,
+    rgba(255, 255, 255, 0.45),
+    transparent 60%
+  );
+  mix-blend-mode: overlay;
+}
+
+.brandText {
+  background: linear-gradient(120deg, #3a3a3a, #5a5a5a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  position: relative;
+}
+.brand:hover .brandText {
+  background: linear-gradient(120deg, #b12167, #f6d365 80%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  transition: background 0.5s;
+}
+
+/* Links */
+/* (Navigation link styles removed as no center links are displayed) */
+
+/* CTA */
+.primaryCta {
+  background: linear-gradient(120deg, #b12167, #d8476d, #ffb37a);
+  color: #fff;
+  border: none;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.65rem 1.2rem;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px -6px rgba(177, 33, 103, 0.5);
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+.primaryCta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px -8px rgba(177, 33, 103, 0.55);
+}
+
+/* User / avatar */
+.userArea {
+  position: relative;
+}
+.avatarButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  background: linear-gradient(135deg, #b12167, #f6d365);
+  color: #fff;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 14px -4px rgba(177, 33, 103, 0.55);
+  transition: transform 0.25s;
+}
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+.displayName {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  background: linear-gradient(120deg, #3a3a3a, #5a5a5a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  max-width: 130px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.caretIcon {
+  opacity: 0.65;
+  transition: transform 0.3s;
+}
+.avatarButton[aria-expanded="true"] .caretIcon {
+  transform: rotate(180deg);
+}
+.avatarButton:hover .avatar {
+  transform: scale(1.05);
+}
+
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: 52px;
+  background: #ffffff;
+  border: 1px solid #f3d8e4;
+  box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.18);
+  padding: 0.6rem 0.75rem 0.8rem;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 180px;
+  animation: fadeSlide 0.35s ease;
+  z-index: 60;
+}
+.dropdownHeader {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #b12167;
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+}
+.dropdown button {
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 0.45rem 0.4rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.dropdown button:hover {
+  background: #fff5f8;
+}
+.logoutBtn {
+  color: #b12167;
+  font-weight: 600;
+}
+
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile toggle */
+.mobileToggle {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0.4rem;
+  cursor: pointer;
+}
+.mobileToggle span {
+  width: 22px;
+  height: 2px;
+  background: #3a3a3a;
+  border-radius: 2px;
+}
+
+/* Mobile panel */
+.mobilePanel {
+  display: none;
+  flex-direction: column;
+  gap: 1.2rem;
+  padding: 0 1.2rem 1.2rem;
+  border-bottom: 1px solid rgba(177, 33, 103, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), #fff);
+  backdrop-filter: blur(12px);
+  transform-origin: top center;
+  animation: panelClose 0.4s ease forwards;
+}
+.mobilePanelOpen {
+  animation: panelOpen 0.45s ease forwards;
+}
+@keyframes panelOpen {
+  from {
+    opacity: 0;
+    transform: scaleY(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+@keyframes panelClose {
+  from {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+  to {
+    opacity: 0;
+    transform: scaleY(0.85);
+  }
+}
+
+.mobileActions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.mobileActions button {
+  background: none;
+  border: 1px solid #f3d8e4;
+  padding: 0.55rem 0.9rem;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+.mobileActions button:hover {
+  background: #fff5f9;
+}
+.mobileActions .primaryCta {
+  width: 100%;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 900px) {
+  .centerGroup {
+    display: none;
+  }
+  .mobileToggle {
+    display: flex;
+  }
+  .mobilePanel {
+    display: flex;
+  }
+}
+
+@media (max-width: 500px) {
+  .brand {
+    font-size: 1.05rem;
+  }
+  .navbar {
+    padding: 0.7rem 0.9rem;
+  }
+  .avatar {
+    width: 34px;
+    height: 34px;
+    font-size: 0.85rem;
+  }
 }
