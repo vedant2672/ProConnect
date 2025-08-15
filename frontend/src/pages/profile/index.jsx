@@ -19,16 +19,56 @@ export default function ProfilePage() {
   const dispatch = useDispatch();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState(null); // 'work' | 'education' | null
 
-  const [inputData, setInputData] = useState({
+  const [workInput, setWorkInput] = useState({
     company: "",
     position: "",
     years: "",
   });
 
-  const handleWorkInputChange = (e) => {
+  const [educationInput, setEducationInput] = useState({
+    school: "",
+    degree: "",
+    fieldOfStudy: "",
+    years: "",
+  });
+
+  const handleWorkChange = (e) => {
     const { name, value } = e.target;
-    setInputData({ ...inputData, [name]: value });
+    setWorkInput((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEducationChange = (e) => {
+    const { name, value } = e.target;
+    setEducationInput((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const openModal = (type) => {
+    setModalType(type);
+    setIsModalOpen(true);
+  };
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setModalType(null);
+  };
+
+  const addWork = () => {
+    setUserProfile((prev) => ({
+      ...prev,
+      pastWork: [...(prev.pastWork || []), workInput],
+    }));
+    setWorkInput({ company: "", position: "", years: "" });
+    closeModal();
+  };
+
+  const addEducation = () => {
+    setUserProfile((prev) => ({
+      ...prev,
+      education: [...(prev.education || []), educationInput],
+    }));
+    setEducationInput({ school: "", degree: "", fieldOfStudy: "", years: "" });
+    closeModal();
   };
 
   useEffect(() => {
@@ -202,11 +242,38 @@ export default function ProfilePage() {
                 })}
                 <button
                   className={styles.addWorkBtn}
-                  onClick={() => {
-                    setIsModalOpen(true);
-                  }}
+                  onClick={() => openModal("work")}
                 >
                   Add Work
+                </button>
+              </div>
+            </div>
+            <div className="education">
+              <h4>Education</h4>
+
+              <div className={styles.workHistoryContainer}>
+                {(userProfile.education || []).map((education, index) => {
+                  return (
+                    <div key={index} className={styles.workHistoryCard}>
+                      <p
+                        style={{
+                          fontWeight: "bold",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.8rem",
+                        }}
+                      >
+                        {education.degree} - {education.fieldOfStudy}
+                      </p>
+                      <p>{education.school}</p>
+                    </div>
+                  );
+                })}
+                <button
+                  className={styles.addWorkBtn}
+                  onClick={() => openModal("education")}
+                >
+                  Add Education
                 </button>
               </div>
             </div>
@@ -225,44 +292,77 @@ export default function ProfilePage() {
         )}
 
         {isModalOpen && (
-          <div
-            onClick={() => {
-              setIsModalOpen(false);
-            }}
-            className={styles.commentsContainer}
-          >
+          <div onClick={closeModal} className={styles.commentsContainer}>
             <div
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
+              onClick={(e) => e.stopPropagation()}
               className={styles.allCommentsContainer}
             >
-              <input
-                onChange={handleWorkInputChange}
-                name="company"
-                className={styles.inputField}
-                type="text"
-                placeholder="Enter Company"
-              />
-              <input
-                onChange={handleWorkInputChange}
-                name="position"
-                className={styles.inputField}
-                type="text"
-                placeholder="Enter Position"
-              />
-              <input
-                onChange={handleWorkInputChange}
-                name="years"
-                className={styles.inputField}
-                type="number"
-                placeholder="Years"
-              />
+              {modalType === "work" && (
+                <>
+                  <input
+                    onChange={handleWorkChange}
+                    name="company"
+                    value={workInput.company}
+                    className={styles.inputField}
+                    type="text"
+                    placeholder="Company"
+                  />
+                  <input
+                    onChange={handleWorkChange}
+                    name="position"
+                    value={workInput.position}
+                    className={styles.inputField}
+                    type="text"
+                    placeholder="Position"
+                  />
+                  <input
+                    onChange={handleWorkChange}
+                    name="years"
+                    value={workInput.years}
+                    className={styles.inputField}
+                    type="number"
+                    placeholder="Years"
+                  />
+                  <div onClick={addWork} className={styles.updateProfileBtn}>
+                    Add Work
+                  </div>
+                </>
+              )}
+              {modalType === "education" && (
+                <>
+                  <input
+                    onChange={handleEducationChange}
+                    name="school"
+                    value={educationInput.school}
+                    className={styles.inputField}
+                    type="text"
+                    placeholder="School"
+                  />
+                  <input
+                    onChange={handleEducationChange}
+                    name="degree"
+                    value={educationInput.degree}
+                    className={styles.inputField}
+                    type="text"
+                    placeholder="Degree"
+                  />
+                  <input
+                    onChange={handleEducationChange}
+                    name="fieldOfStudy"
+                    value={educationInput.fieldOfStudy}
+                    className={styles.inputField}
+                    type="text"
+                    placeholder="Field of Study"
+                  />
 
-              <div onClick={() => {
-                setUserProfile({...userProfile, pastWork: [...userProfile.pastWork, inputData]})
-                setIsModalOpen(false);
-              }} className={styles.updateProfileBtn}>Add Work</div>
+                  <div
+                    onClick={addEducation}
+                    className={styles.updateProfileBtn}
+                  >
+                    Add Education
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}
