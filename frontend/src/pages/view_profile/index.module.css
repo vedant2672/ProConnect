@@ -1,0 +1,96 @@
+.container {
+  padding: 1.3rem;
+  background: rgb(250, 249, 249);
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+.backDropContainer {
+  width: 100%;
+  height: 30vh;
+  background: url("https://images.pexels.com/photos/1266810/pexels-photo-1266810.jpeg?_gl=1*1h7uts7*_ga*NzE5MTI0NjY1LjE3NTMzNDk1ODQ.*_ga_8JE65Q40S6*czE3NTQ0NjMwMzIkbzMkZzEkdDE3NTQ0NjM2NjQkajQ5JGwwJGgw");
+  background-size: cover;
+  background-repeat: no-repeat;
+  position: relative;
+  border-radius: 20px;
+}
+
+.backDropContainer img {
+  width: 10em;
+  height: 10em;
+  object-fit: cover;
+  border-radius: 50%;
+  position: absolute;
+  bottom: -30%;
+  left: 8%;
+  text-align: center;
+}
+
+.profileContainer__details {
+  padding-top: 6.6rem;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+}
+.card__profileContainer {
+  display: flex;
+}
+
+.card__profileContainer {
+  width: 3.4rem;
+  height: auto;
+  height: 3.4rem;
+  object-fit: cover;
+}
+
+.connectBtn {
+  padding-inline: 0.8rem;
+  padding-block: 0.3rem;
+  background: rgba(3, 93, 183, 0.905);
+  outline: none;
+  border: none;
+  color: white;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.connectedButton {
+  padding-inline: 0.8rem;
+  padding-block: 0.3rem;
+  background: white;
+  outline: none;
+  border: 1px solid rgba(3, 93, 183, 0.905);
+  color: rgba(3, 93, 183, 0.905);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.workHistoryContainer {
+  display: flex;
+  gap: 1.4rem;
+  padding-top: 1.4rem;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.workHistoryCard {
+  min-width: fit-content;
+  padding-inline: 2.5rem;
+  padding-block: 10px;
+  border-radius: 10px;
+  box-shadow: rgba(173, 173, 173) 10px 10px 15px;
+}
+
+.profileContainer__flex {
+  display: flex;
+  gap: 0.7rem;
+}
+
+@media only screen and (max-width: 600px) {
+  .profileContainer__flex {
+    flex-direction: column;
+  }
+}
