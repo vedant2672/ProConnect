@@ -2,6 +2,7 @@ import { BASE_URL } from "@/config";
 import {
   AcceptConnection,
   getMyConnectionRequests,
+  getConnectionsRequest,
 } from "@/config/redux/action/authAction";
 import DashboardLayout from "@/layout/DashboardLayout";
 import UserLayout from "@/layout/UserLayout";
@@ -21,28 +22,50 @@ export default function MyConnectionsPage() {
   // Fetch connection requests on mount
   useEffect(() => {
     setLoading(true);
-    const promise = dispatch(
-      getMyConnectionRequests({ token: localStorage.getItem("token") })
-    );
-    Promise.resolve(promise).finally(() => setLoading(false));
+    const token = localStorage.getItem("token");
+    const p1 = dispatch(getMyConnectionRequests({ token }));
+    const p2 = dispatch(getConnectionsRequest({ token }));
+    Promise.all([p1, p2]).finally(() => setLoading(false));
   }, [dispatch]);
 
+  // Incoming requests waiting for my action (I am the connectionId)
   const pendingRequests = useMemo(
     () => authState.connectionRequest.filter((c) => c.status_accepted === null),
     [authState.connectionRequest]
   );
-  const acceptedConnections = useMemo(
-    () => authState.connectionRequest.filter((c) => c.status_accepted !== null),
-    [authState.connectionRequest]
-  );
+
+  // Build a unified list of accepted connections (both directions)
+  const acceptedConnections = useMemo(() => {
+    // Incoming accepted: requests where someone sent me a request and I accepted
+    const incomingAccepted = authState.connectionRequest
+      .filter((c) => c.status_accepted === true)
+      .map((c) => ({
+        _id: c._id,
+        user: c.userId, // other party is the sender
+        raw: c,
+        direction: "incoming",
+      }));
+
+    // Outgoing accepted: requests I sent that have been accepted
+    const outgoingAccepted = authState.connections
+      .filter((c) => c.status_accepted === true)
+      .map((c) => ({
+        _id: c._id,
+        user: c.connectionId, // other party is the receiver
+        raw: c,
+        direction: "outgoing",
+      }));
+
+    return [...incomingAccepted, ...outgoingAccepted];
+  }, [authState.connectionRequest, authState.connections]);
 
   const filteredConnections = useMemo(() => {
     if (!search.trim()) return acceptedConnections;
     const q = search.toLowerCase();
     return acceptedConnections.filter(
       (c) =>
-        c.userId.name?.toLowerCase().includes(q) ||
-        c.userId.username?.toLowerCase().includes(q)
+        c.user?.name?.toLowerCase().includes(q) ||
+        c.user?.username?.toLowerCase().includes(q)
     );
   }, [acceptedConnections, search]);
 
@@ -181,18 +204,18 @@ export default function MyConnectionsPage() {
                   key={conn._id}
                   className={styles.networkCard}
                   onClick={() =>
-                    router.push(`/view_profile/${conn.userId.username}`)
+                    router.push(`/view_profile/${conn.user.username}`)
                   }
                 >
                   <div className={styles.networkAvatar}>
                     <img
-                      src={`${BASE_URL}/${conn.userId.profilePicture}`}
-                      alt={conn.userId.name + " profile"}
+                      src={`${BASE_URL}/${conn.user.profilePicture}`}
+                      alt={conn.user.name + " profile"}
                     />
                   </div>
-                  <h5 className={styles.networkName}>{conn.userId.name}</h5>
+                  <h5 className={styles.networkName}>{conn.user.name}</h5>
                   <p className={styles.networkUsername}>
-                    @{conn.userId.username}
+                    @{conn.user.username}
                   </p>
                 </div>
               ))}
