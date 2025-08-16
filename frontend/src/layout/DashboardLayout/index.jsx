@@ -3,7 +3,7 @@ import styles from "./index.module.css";
 import { useRouter } from "next/router";
 import { setTokenIsThere } from "@/config/redux/reducer/authReducer";
 import { useDispatch, useSelector } from "react-redux";
-import { BASE_URL } from "@/config";
+import { BASE_URL, resolveImageUrl } from "@/config";
 
 export default function DashboardLayout({ children }) {
   const router = useRouter();
@@ -128,7 +128,7 @@ export default function DashboardLayout({ children }) {
               }
             >
               <img
-                src={`${BASE_URL}/${profile.userId.profilePicture}`}
+                src={resolveImageUrl(profile.userId.profilePicture)}
                 alt=""
                 className={styles.profileAvatar}
                 loading="lazy"

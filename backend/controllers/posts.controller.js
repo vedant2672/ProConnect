@@ -1,6 +1,7 @@
 import Profile from "../models/profile.model.js";
 import User from "../models/user.model.js";
 import multer from "multer";
+import cloudinary from "../config/cloudinary.js";
 import Post from "../models/post.model.js";
 import Comment from "../models/comments.model.js";
 
@@ -17,11 +18,56 @@ export const createPost = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    let mediaUrl = "";
+    let fileType = "";
+    if (req.file) {
+      if (
+        !process.env.CLOUDINARY_CLOUD_NAME ||
+        !process.env.CLOUDINARY_API_KEY ||
+        !process.env.CLOUDINARY_API_SECRET
+      ) {
+        return res.status(500).json({
+          message:
+            "Cloudinary credentials missing on server. Ask admin to set environment variables.",
+        });
+      }
+      try {
+        const uploadResult = await new Promise((resolve, reject) => {
+          try {
+            const stream = cloudinary.uploader.upload_stream(
+              {
+                folder: "post_media",
+                resource_type: "image",
+                transformation: [
+                  { width: 1280, crop: "limit" },
+                  { quality: "auto" },
+                ],
+                overwrite: false,
+              },
+              (err, uploaded) => {
+                if (err) return reject(err);
+                resolve(uploaded);
+              }
+            );
+            stream.end(req.file.buffer);
+          } catch (err) {
+            reject(err);
+          }
+        });
+        mediaUrl = uploadResult.secure_url;
+        fileType = uploadResult.format || req.file.mimetype.split("/")[1] || "";
+      } catch (e) {
+        return res
+          .status(500)
+          .json({ message: "Media upload failed: " + (e.message || e) });
+      }
+    }
+
     const post = new Post({
       userId: user._id,
       body: req.body.body,
-      media: req.file != undefined ? req.file.filename : "",
-      fileType: req.file != undefined ? req.file.mimetype.split("/")[1] : "",
+      media: mediaUrl,
+      fileType: fileType,
     });
 
     await post.save();

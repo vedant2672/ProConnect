@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import styles from "./index.module.css";
-import { BASE_URL, clientServer } from "@/config";
+import { BASE_URL, clientServer, resolveImageUrl } from "@/config";
 import { getAllPosts } from "@/config/redux/action/postAction";
 
 export default function ProfilePage() {
@@ -212,7 +212,7 @@ export default function ProfilePage() {
                     accept="image/*"
                   />
                   <img
-                    src={`${BASE_URL}/${userProfile.userId.profilePicture}`}
+                    src={resolveImageUrl(userProfile.userId.profilePicture)}
                     alt="Profile avatar"
                     className={styles.avatarImg}
                   />

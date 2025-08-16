@@ -1,4 +1,4 @@
-import { BASE_URL } from "@/config";
+import { BASE_URL, resolveImageUrl } from "@/config";
 import {
   AcceptConnection,
   getMyConnectionRequests,
@@ -132,7 +132,7 @@ export default function MyConnectionsPage() {
                 >
                   <div className={styles.avatarWrapper}>
                     <img
-                      src={`${BASE_URL}/${req.userId.profilePicture}`}
+                      src={resolveImageUrl(req.userId.profilePicture)}
                       alt={req.userId.name + " profile picture"}
                       className={styles.avatarImg}
                     />
@@ -209,7 +209,7 @@ export default function MyConnectionsPage() {
                 >
                   <div className={styles.networkAvatar}>
                     <img
-                      src={`${BASE_URL}/${conn.user.profilePicture}`}
+                      src={resolveImageUrl(conn.user.profilePicture)}
                       alt={conn.user.name + " profile"}
                     />
                   </div>

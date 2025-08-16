@@ -18,16 +18,8 @@ import multer from "multer";
 
 const router = Router();
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, file.originalname);
-  },
-});
-
-const upload = multer({ storage: storage });
+// Use memory storage so file buffer can be sent directly to Cloudinary
+const upload = multer({ storage: multer.memoryStorage() });
 
 router
   .route("/update_profile_picture")

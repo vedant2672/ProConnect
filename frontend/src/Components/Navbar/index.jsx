@@ -3,7 +3,7 @@ import styles from "./styles.module.css";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
 import { reset } from "@/config/redux/reducer/authReducer";
-import { BASE_URL } from "@/config";
+import { BASE_URL, resolveImageUrl } from "@/config";
 
 function NavbarComponent() {
   const router = useRouter();
@@ -58,7 +58,7 @@ function NavbarComponent() {
                 <span className={styles.avatar}>
                   {profilePicture ? (
                     <img
-                      src={`${BASE_URL}/${profilePicture}`}
+                      src={resolveImageUrl(profilePicture)}
                       alt={displayName || "User avatar"}
                       className={styles.avatarImg}
                       loading="lazy"

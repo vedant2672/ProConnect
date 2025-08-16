@@ -3,7 +3,7 @@ import DashboardLayout from "@/layout/DashboardLayout";
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllUsers } from "@/config/redux/action/authAction";
-import { BASE_URL } from "@/config";
+import { BASE_URL, resolveImageUrl } from "@/config";
 import styles from "./index.module.css";
 import { useRouter } from "next/router";
 
@@ -106,7 +106,7 @@ export default function discover() {
                     >
                       <span className={styles.avatarWrap}>
                         <img
-                          src={`${BASE_URL}/${user.userId.profilePicture}`}
+                          src={resolveImageUrl(user.userId.profilePicture)}
                           alt=""
                           loading="lazy"
                         />

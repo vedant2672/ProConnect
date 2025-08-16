@@ -1,4 +1,4 @@
-import { BASE_URL, clientServer } from "@/config";
+import { BASE_URL, clientServer, resolveImageUrl } from "@/config";
 import DashboardLayout from "@/layout/DashboardLayout";
 import UserLayout from "@/layout/UserLayout";
 import React, { useEffect, useMemo, useState } from "react";
@@ -95,7 +95,7 @@ export default function ViewProfilePage({ userProfile }) {
             <div className={styles.bannerOverlay} />
             <div className={styles.avatarWrapper}>
               <img
-                src={`${BASE_URL}/${userProfile.userId.profilePicture}`}
+                src={resolveImageUrl(userProfile.userId.profilePicture)}
                 alt={`${userProfile.userId.name} avatar`}
                 className={styles.avatarImg}
               />

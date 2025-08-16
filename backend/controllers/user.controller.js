@@ -5,6 +5,7 @@ import ConnectionRequest from "../models/connections.model.js";
 import crypto from "crypto";
 import PDFDocument from "pdfkit";
 import fs from "fs";
+import cloudinary from "../config/cloudinary.js";
 
 const convertUserDataToPDF = async (userData) => {
   const doc = new PDFDocument();
@@ -106,21 +107,55 @@ export const login = async (req, res) => {
 
 export const uploadProfilePicture = async (req, res) => {
   const { token } = req.body;
-
   try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
     const user = await User.findOne({ token });
-
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    user.profilePicture = req.file.filename;
+    // Quick sanity check for Cloudinary credentials
+    if (
+      !process.env.CLOUDINARY_CLOUD_NAME ||
+      !process.env.CLOUDINARY_API_KEY ||
+      !process.env.CLOUDINARY_API_SECRET
+    ) {
+      return res.status(500).json({
+        message:
+          "Cloudinary credentials missing on server. Ask admin to set environment variables.",
+      });
+    }
 
+    const result = await new Promise((resolve, reject) => {
+      try {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: "profile_pics",
+            resource_type: "image",
+            transformation: [{ width: 400, height: 400, crop: "limit" }],
+            overwrite: false,
+          },
+          (err, uploaded) => {
+            if (err) return reject(err);
+            resolve(uploaded);
+          }
+        );
+        stream.end(req.file.buffer);
+      } catch (e) {
+        reject(e);
+      }
+    });
+
+    user.profilePicture = result.secure_url; // store full URL
     await user.save();
-
-    return res.json({ message: "Profile picture uploaded successfully" });
+    return res.json({
+      message: "Profile picture uploaded",
+      url: result.secure_url,
+    });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message || "Upload failed" });
   }
 };
 

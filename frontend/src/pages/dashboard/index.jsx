@@ -12,7 +12,7 @@ import UserLayout from "@/layout/UserLayout";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styles from "./index.module.css";
-import { BASE_URL } from "@/config";
+import { BASE_URL, resolveImageUrl } from "@/config";
 import { resetPostId } from "@/config/redux/reducer/postReducer";
 
 function dashboard() {
@@ -67,7 +67,7 @@ function dashboard() {
             <div className={styles.composeAvatarSection}>
               <img
                 className={styles.composeAvatar}
-                src={`${BASE_URL}/${authState.user.userId.profilePicture}`}
+                src={resolveImageUrl(authState.user.userId.profilePicture)}
                 alt="Your profile picture"
               />
             </div>
@@ -140,7 +140,7 @@ function dashboard() {
                   <header className={styles.postHeader}>
                     <img
                       className={styles.postAvatar}
-                      src={`${BASE_URL}/${post.userId.profilePicture}`}
+                      src={resolveImageUrl(post.userId.profilePicture)}
                       alt={`${post.userId.name} avatar`}
                     />
                     <div className={styles.postMeta}>
@@ -177,7 +177,7 @@ function dashboard() {
                   <div className={styles.postBody}>{post.body}</div>
                   {post.media && post.media !== "" && (
                     <div className={styles.postMedia}>
-                      <img src={`${BASE_URL}/${post.media}`} alt="Post media" />
+                      <img src={resolveImageUrl(post.media)} alt="Post media" />
                     </div>
                   )}
                   <footer className={styles.postActions}>
