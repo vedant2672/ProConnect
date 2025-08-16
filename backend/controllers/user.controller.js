@@ -5,36 +5,152 @@ import ConnectionRequest from "../models/connections.model.js";
 import crypto from "crypto";
 import PDFDocument from "pdfkit";
 import fs from "fs";
+import https from "https";
 import cloudinary from "../config/cloudinary.js";
 
+const fetchRemoteBuffer = (url) =>
+  new Promise((resolve, reject) => {
+    https
+      .get(url, (res) => {
+        if (res.statusCode !== 200) {
+          return reject(new Error("Failed to fetch image: " + res.statusCode));
+        }
+        const data = [];
+        res
+          .on("data", (d) => data.push(d))
+          .on("end", () => resolve(Buffer.concat(data)))
+          .on("error", reject);
+      })
+      .on("error", reject);
+  });
+
 const convertUserDataToPDF = async (userData) => {
-  const doc = new PDFDocument();
+  const doc = new PDFDocument({ margin: 50 });
 
   const outputPath = crypto.randomBytes(16).toString("hex") + ".pdf";
-  const stream = fs.createWriteStream("uploads/" + outputPath);
-
+  const outDir = "uploads";
+  if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+  const stream = fs.createWriteStream(`${outDir}/${outputPath}`);
   doc.pipe(stream);
 
-  doc.image(`uploads/${userData.userId.profilePicture}`, {
-    align: "center",
-    width: 100,
-  });
+  const primary = '#1f4e79';
+  const lightGray = '#444';
 
-  doc.fontSize(14).text(`Name: ${userData.userId.name}`);
-  doc.fontSize(14).text(`Username: ${userData.userId.username}`);
-  doc.fontSize(14).text(`Email: ${userData.userId.email}`);
-  doc.fontSize(14).text(`Bio: ${userData.bio}`);
-  doc.fontSize(14).text(`Current Position: ${userData.currentPost}`);
+  // Header with name & avatar (circular) positioned dynamically
+  const pageWidth = doc.page.width;
+  const marginLeft = doc.page.margins.left;
+  const marginRight = doc.page.margins.right;
+  const contentRightX = pageWidth - marginRight;
+  const AVATAR_SIZE = 110; // diameter
+  const AVATAR_X = contentRightX - AVATAR_SIZE; // right aligned
+  const AVATAR_Y = doc.y; // top current y
+  let avatarBottom = AVATAR_Y;
 
-  doc.fontSize(14).text("Past Work : ");
-  userData.pastWork.forEach((work, index) => {
-    doc.fontSize(14).text(`Company Name :  ${work.company}`);
-    doc.fontSize(14).text(`Position :  ${work.position}`);
-    doc.fontSize(14).text(`Years :  ${work.years}`);
-  });
+  const drawCircularImage = (bufferOrPath) => {
+    try {
+      doc.save();
+      // Circle clipping path
+      doc.circle(AVATAR_X + AVATAR_SIZE / 2, AVATAR_Y + AVATAR_SIZE / 2, AVATAR_SIZE / 2).clip();
+      doc.image(bufferOrPath, AVATAR_X, AVATAR_Y, { width: AVATAR_SIZE, height: AVATAR_SIZE, fit: [AVATAR_SIZE, AVATAR_SIZE] });
+      doc.restore();
+      avatarBottom = AVATAR_Y + AVATAR_SIZE;
+    } catch {}
+  };
+
+  try {
+    const pic = userData.userId.profilePicture;
+    let placed = false;
+    if (pic) {
+      if (/^https?:\/\//i.test(pic)) {
+        try { const buf = await fetchRemoteBuffer(pic); drawCircularImage(buf); placed = true; } catch {}
+      } else {
+        const localPath = `${outDir}/${pic}`;
+        if (fs.existsSync(localPath)) { drawCircularImage(localPath); placed = true; }
+      }
+    }
+    if (!placed) {
+      const fallback = 'uploads/default.jpg';
+      if (fs.existsSync(fallback)) drawCircularImage(fallback);
+    }
+  } catch {}
+
+  // Text block left of avatar
+  const textWidthLimit = AVATAR_X - marginLeft - 15; // leave gap before avatar
+  const startY = AVATAR_Y;
+  doc.fillColor(primary).fontSize(26).text(userData.userId.name || 'Unnamed User', marginLeft, startY, { width: textWidthLimit, continued: false });
+  doc.moveDown(0.3).fillColor(lightGray).fontSize(12).text(`${userData.userId.username || ''} | ${userData.userId.email || ''}`, { width: textWidthLimit });
+
+  // After header ensure cursor is below avatar
+  const headerBottom = Math.max(doc.y, avatarBottom);
+  doc.y = headerBottom + 12; // push below avatar area
+
+  // Separator line across full content width
+  doc.moveTo(marginLeft, doc.y).lineTo(contentRightX, doc.y).strokeColor(primary).lineWidth(2).stroke();
+  doc.moveDown();
+
+  const sectionTitle = (title) => {
+    doc
+      .moveDown(0.6)
+      .fillColor(primary)
+      .fontSize(16)
+      .text(title.toUpperCase(), { underline: false });
+    doc.fillColor('black').moveDown(0.2);
+  };
+
+  // Summary / Bio
+  if (userData.bio) {
+    sectionTitle('Summary');
+    doc.fontSize(12).text(userData.bio, { lineGap: 3 });
+  }
+
+  // Current Position
+  if (userData.currentPost) {
+    sectionTitle('Current Position');
+    doc.fontSize(12).text(userData.currentPost, { lineGap: 3 });
+  }
+
+  // Work Experience
+  if (userData.pastWork && userData.pastWork.length) {
+    sectionTitle('Work Experience');
+    userData.pastWork.forEach((work) => {
+      doc
+        .fontSize(13)
+        .fillColor('#000')
+        .text(work.position || 'Role', { continued: true })
+        .fillColor(lightGray)
+        .fontSize(11)
+        .text(`  @ ${work.company || 'Company'}`);
+      if (work.years) {
+        doc.fontSize(10).fillColor('#666').text(work.years);
+      }
+      doc.moveDown(0.3);
+    });
+  }
+
+  // Education
+  if (userData.education && userData.education.length) {
+    sectionTitle('Education');
+    userData.education.forEach((edu) => {
+      doc
+        .fontSize(13)
+        .fillColor('#000')
+        .text(edu.school || 'School', { continued: true })
+        .fillColor(lightGray)
+        .fontSize(11)
+        .text(`  - ${edu.degree || ''} ${edu.fieldOfStudy ? '(' + edu.fieldOfStudy + ')' : ''}`);
+      doc.moveDown(0.3);
+    });
+  }
+
+  // Footer
+  doc.moveDown();
+  doc.strokeColor('#ccc').lineWidth(1).moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+  doc
+    .fontSize(9)
+    .fillColor('#666')
+    .text('Generated by ProConnect', 50, doc.y + 4, { align: 'center' });
 
   doc.end();
-
   return outputPath;
 };
 
@@ -246,16 +362,20 @@ export const getAllUserProfile = async (req, res) => {
 };
 
 export const downloadProfile = async (req, res) => {
-  const user_id = req.query.id;
-
-  const userProfile = await Profile.findOne({ userId: user_id }).populate(
-    "userId",
-    "name email username profilePicture"
-  );
-
-  let outputPath = await convertUserDataToPDF(userProfile);
-
-  return res.json({ message: outputPath });
+  try {
+    const user_id = req.query.id;
+    const userProfile = await Profile.findOne({ userId: user_id }).populate(
+      "userId",
+      "name email username profilePicture"
+    );
+    if (!userProfile) {
+      return res.status(404).json({ message: "Profile not found" });
+    }
+    const outputPath = await convertUserDataToPDF(userProfile);
+    return res.json({ message: outputPath });
+  } catch (err) {
+    return res.status(500).json({ message: err.message || "Failed to generate PDF" });
+  }
 };
 
 export const sendConnectionRequest = async (req, res) => {

@@ -313,7 +313,7 @@ export default function ProfilePage() {
                       <li key={post._id} className={styles.activityItem}>
                         {post.media && (
                           <span className={styles.activityMediaWrap}>
-                            <img src={`${BASE_URL}/${post.media}`} alt="" />
+                            <img src={resolveImageUrl(post.media)} alt="" />
                           </span>
                         )}
                         <p className={styles.activityBody}>{post.body}</p>

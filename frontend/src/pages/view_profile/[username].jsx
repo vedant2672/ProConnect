@@ -216,7 +216,7 @@ export default function ViewProfilePage({ userProfile }) {
                     {post.media && (
                       <div className={styles.postMediaWrapper}>
                         <img
-                          src={`${BASE_URL}/${post.media}`}
+                          src={resolveImageUrl(post.media)}
                           alt="Post media"
                           className={styles.postMedia}
                         />
