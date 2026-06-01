@@ -12,13 +12,16 @@ export const loginUser = createAsyncThunk(
 
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
+        return thunkAPI.fulfillWithValue(response.data);
       } else {
         return thunkAPI.rejectWithValue({
           message: "token not provided",
         });
       }
     } catch (error) {
-      return thunkAPI.rejectWithValue(error.response.data);
+      return thunkAPI.rejectWithValue(
+        error.response?.data || { message: "Login failed" }
+      );
     }
   }
 );
@@ -33,8 +36,11 @@ export const registerUser = createAsyncThunk(
         email: user.email,
         name: user.name,
       });
+      return thunkAPI.fulfillWithValue(request.data);
     } catch (error) {
-      return thunkAPI.rejectWithValue(error.response.data);
+      return thunkAPI.rejectWithValue(
+        error.response?.data || { message: "Registration failed" }
+      );
     }
   }
 );
@@ -50,7 +56,9 @@ export const getAboutUser = createAsyncThunk(
       });
       return thunkAPI.fulfillWithValue(response.data);
     } catch (err) {
-      return thunkAPI.rejectWithValue(err.response.data);
+      return thunkAPI.rejectWithValue(
+        err.response?.data || { message: "Failed to fetch profile" }
+      );
     }
   }
 );
@@ -62,7 +70,9 @@ export const getAllUsers = createAsyncThunk(
       const response = await clientServer.get("/user/get_all_users");
       return thunkAPI.fulfillWithValue(response.data);
     } catch (err) {
-      return thunkAPI.rejectWithValue(err.response.data);
+      return thunkAPI.rejectWithValue(
+        err.response?.data || { message: "Failed to fetch users" }
+      );
     }
   }
 );
@@ -82,7 +92,9 @@ export const sendConnectionRequest = createAsyncThunk(
       thunkAPI.dispatch(getConnectionsRequest({ token: user.token }));
       return thunkAPI.fulfillWithValue(response.data);
     } catch (error) {
-      return thunkAPI.rejectWithValue(error.response.data.message);
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to send request"
+      );
     }
   }
 );
@@ -99,7 +111,9 @@ export const getConnectionsRequest = createAsyncThunk(
       return thunkAPI.fulfillWithValue(response.data.connections);
     } catch (error) {
       console.log(error);
-      return thunkAPI.rejectWithValue(error.response.data.message);
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to fetch requests"
+      );
     }
   }
 );
@@ -115,7 +129,9 @@ export const getMyConnectionRequests = createAsyncThunk(
       });
       return thunkAPI.fulfillWithValue(response.data);
     } catch (error) {
-      return thunkAPI.rejectWithValue(error.response.data.message);
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to fetch connection requests"
+      );
     }
   }
 );
@@ -136,7 +152,9 @@ export const AcceptConnection = createAsyncThunk(
       thunkAPI.dispatch(getMyConnectionRequests({ token: user.token }));
       return thunkAPI.fulfillWithValue(response.data);
     } catch (error) {
-      return thunkAPI.rejectWithValue(error.response.data.message);
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to update connection"
+      );
     }
   }
 );

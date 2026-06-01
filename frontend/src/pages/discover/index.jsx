@@ -24,11 +24,14 @@ export default function discover() {
     let list = authState.all_users || [];
     if (query.trim()) {
       const q = query.toLowerCase();
-      list = list.filter((u) =>
-        [u.userId.name, u.userId.username].some((v) =>
+      list = list.filter((u) => {
+        const specNames = (u.specialisations || [])
+          .map((s) => s.name)
+          .join(" ");
+        return [u.userId.name, u.userId.username, specNames].some((v) =>
           v?.toLowerCase().includes(q)
-        )
-      );
+        );
+      });
     }
     return list;
   }, [authState.all_users, query]);
@@ -48,7 +51,7 @@ export default function discover() {
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search by name or username"
+                  placeholder="Search by name, username, or specialisation"
                   className={styles.searchInput}
                   aria-label="Search profiles"
                 />
@@ -118,6 +121,11 @@ export default function discover() {
                         <span className={styles.userHandle}>
                           @{user.userId.username}
                         </span>
+                        {(user.specialisations || []).length > 0 && (
+                          <span className={styles.userSpecialisation}>
+                            {user.specialisations.map((s) => s.name).join(", ")}
+                          </span>
+                        )}
                       </span>
                       <span className={styles.viewChevron} aria-hidden>
                         <svg

@@ -1,12 +1,15 @@
-import bcrypt from "bcrypt";
+﻿import bcrypt from "bcrypt";
 import User from "../models/user.model.js";
 import Profile from "../models/profile.model.js";
+import Specialisation from "../models/specialisation.model.js";
+import Contact from "../models/contact.model.js";
 import ConnectionRequest from "../models/connections.model.js";
 import crypto from "crypto";
 import PDFDocument from "pdfkit";
 import fs from "fs";
 import https from "https";
 import cloudinary from "../config/cloudinary.js";
+import { OAuth2Client } from "google-auth-library";
 
 const fetchRemoteBuffer = (url) =>
   new Promise((resolve, reject) => {
@@ -36,20 +39,18 @@ const convertUserDataToPDF = async (userData) => {
   const primary = "#1f4e79";
   const lightGray = "#444";
 
-  // Header with name & avatar (circular) positioned dynamically
   const pageWidth = doc.page.width;
   const marginLeft = doc.page.margins.left;
   const marginRight = doc.page.margins.right;
   const contentRightX = pageWidth - marginRight;
-  const AVATAR_SIZE = 110; // diameter
-  const AVATAR_X = contentRightX - AVATAR_SIZE; // right aligned
-  const AVATAR_Y = doc.y; // top current y
+  const AVATAR_SIZE = 110;
+  const AVATAR_X = contentRightX - AVATAR_SIZE;
+  const AVATAR_Y = doc.y;
   let avatarBottom = AVATAR_Y;
 
   const drawCircularImage = (bufferOrPath) => {
     try {
       doc.save();
-      // Circle clipping path
       doc
         .circle(
           AVATAR_X + AVATAR_SIZE / 2,
@@ -91,8 +92,7 @@ const convertUserDataToPDF = async (userData) => {
     }
   } catch {}
 
-  // Text block left of avatar
-  const textWidthLimit = AVATAR_X - marginLeft - 15; // leave gap before avatar
+  const textWidthLimit = AVATAR_X - marginLeft - 15;
   const startY = AVATAR_Y;
   doc
     .fillColor(primary)
@@ -110,11 +110,9 @@ const convertUserDataToPDF = async (userData) => {
       { width: textWidthLimit }
     );
 
-  // After header ensure cursor is below avatar
   const headerBottom = Math.max(doc.y, avatarBottom);
-  doc.y = headerBottom + 12; // push below avatar area
+  doc.y = headerBottom + 12;
 
-  // Separator line across full content width
   doc
     .moveTo(marginLeft, doc.y)
     .lineTo(contentRightX, doc.y)
@@ -132,19 +130,23 @@ const convertUserDataToPDF = async (userData) => {
     doc.fillColor("black").moveDown(0.2);
   };
 
-  // Summary / Bio
   if (userData.bio) {
     sectionTitle("Summary");
     doc.fontSize(12).text(userData.bio, { lineGap: 3 });
   }
 
-  // Current Position
   if (userData.currentPost) {
     sectionTitle("Current Position");
     doc.fontSize(12).text(userData.currentPost, { lineGap: 3 });
   }
 
-  // Work Experience
+  // Specialisations
+  if (userData.specialisations && userData.specialisations.length) {
+    sectionTitle("Specialisations");
+    const specNames = userData.specialisations.map((s) => s.name).join(", ");
+    doc.fontSize(12).text(specNames, { lineGap: 3 });
+  }
+
   if (userData.pastWork && userData.pastWork.length) {
     sectionTitle("Work Experience");
     userData.pastWork.forEach((work) => {
@@ -162,7 +164,6 @@ const convertUserDataToPDF = async (userData) => {
     });
   }
 
-  // Education
   if (userData.education && userData.education.length) {
     sectionTitle("Education");
     userData.education.forEach((edu) => {
@@ -181,7 +182,6 @@ const convertUserDataToPDF = async (userData) => {
     });
   }
 
-  // Footer
   doc.moveDown();
   doc
     .strokeColor("#ccc")
@@ -250,6 +250,13 @@ export const login = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // Google-only users have no password set
+    if (!user.password) {
+      return res.status(400).json({
+        message: "This account uses Google sign-in. Please use the Google button to log in.",
+      });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid password" });
@@ -276,7 +283,6 @@ export const uploadProfilePicture = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Quick sanity check for Cloudinary credentials
     if (
       !process.env.CLOUDINARY_CLOUD_NAME ||
       !process.env.CLOUDINARY_API_KEY ||
@@ -308,7 +314,7 @@ export const uploadProfilePicture = async (req, res) => {
       }
     });
 
-    user.profilePicture = result.secure_url; // store full URL
+    user.profilePicture = result.secure_url;
     await user.save();
     return res.json({
       message: "Profile picture uploaded",
@@ -366,7 +372,14 @@ export const getUserAndProfile = async (req, res) => {
       "name email username profilePicture"
     );
 
-    return res.json({ profile: userProfile });
+    const specialisations = await Specialisation.find({ userId: user._id });
+
+    return res.json({
+      profile: {
+        ...userProfile.toObject(),
+        specialisations,
+      },
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -399,7 +412,25 @@ export const getAllUserProfile = async (req, res) => {
       "userId",
       "name email username profilePicture"
     );
-    return res.json({ profiles });
+
+    const allSpecialisations = await Specialisation.find();
+
+    const specMap = {};
+    allSpecialisations.forEach((s) => {
+      const uid = s.userId.toString();
+      if (!specMap[uid]) specMap[uid] = [];
+      specMap[uid].push(s);
+    });
+
+    const profilesWithSpecs = profiles
+      .filter((p) => p.userId != null)
+      .map((p) => {
+        const obj = p.toObject();
+        obj.specialisations = specMap[obj.userId._id.toString()] || [];
+        return obj;
+      });
+
+    return res.json({ profiles: profilesWithSpecs });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -415,12 +446,77 @@ export const downloadProfile = async (req, res) => {
     if (!userProfile) {
       return res.status(404).json({ message: "Profile not found" });
     }
-    const outputPath = await convertUserDataToPDF(userProfile);
+
+    const specialisations = await Specialisation.find({ userId: user_id });
+    const profileData = {
+      ...userProfile.toObject(),
+      specialisations,
+    };
+
+    const outputPath = await convertUserDataToPDF(profileData);
     return res.json({ message: outputPath });
   } catch (err) {
     return res
       .status(500)
       .json({ message: err.message || "Failed to generate PDF" });
+  }
+};
+
+export const addSpecialisation = async (req, res) => {
+  try {
+    const { token, name } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: "Specialisation name is required" });
+    }
+
+    const user = await User.findOne({ token });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const existing = await Specialisation.findOne({
+      userId: user._id,
+      name: name.trim(),
+    });
+    if (existing) {
+      return res.status(400).json({ message: "Specialisation already exists" });
+    }
+
+    const spec = new Specialisation({
+      userId: user._id,
+      name: name.trim(),
+    });
+    await spec.save();
+
+    return res.json({ message: "Specialisation added", specialisation: spec });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const removeSpecialisation = async (req, res) => {
+  try {
+    const { token, specialisationId } = req.body;
+
+    const user = await User.findOne({ token });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const spec = await Specialisation.findOne({
+      _id: specialisationId,
+      userId: user._id,
+    });
+    if (!spec) {
+      return res.status(404).json({ message: "Specialisation not found" });
+    }
+
+    await Specialisation.deleteOne({ _id: specialisationId });
+
+    return res.json({ message: "Specialisation removed" });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -545,7 +641,174 @@ export const getUserProfileAndUserBasedOnUsername = async (req, res) => {
       "userId",
       "name username email profilePicture"
     );
-    return res.json({ profile: userProfile });
+
+    const specialisations = await Specialisation.find({ userId: user._id });
+
+    return res.json({
+      profile: {
+        ...userProfile.toObject(),
+        specialisations,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const googleLogin = async (req, res) => {
+  try {
+    const { code } = req.body;
+
+    if (!code) {
+      return res.status(400).json({ message: "Authorization code is required" });
+    }
+
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI || "http://localhost:3000/auth/google/callback";
+
+    if (!clientId || !clientSecret) {
+      return res.status(500).json({ message: "Google OAuth credentials not configured on server" });
+    }
+
+    const oAuth2Client = new OAuth2Client(clientId, clientSecret, redirectUri);
+
+    // Exchange authorization code for tokens
+    const { tokens } = await oAuth2Client.getToken(code);
+    oAuth2Client.setCredentials(tokens);
+
+    // Verify the ID token to get user info
+    const ticket = await oAuth2Client.verifyIdToken({
+      idToken: tokens.id_token,
+      audience: clientId,
+    });
+
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name, picture } = payload;
+
+    if (!email) {
+      return res.status(400).json({ message: "Could not retrieve email from Google" });
+    }
+
+    // Check if user exists by googleId or email
+    let user = await User.findOne({ $or: [{ googleId }, { email }] });
+    const token = crypto.randomBytes(16).toString("hex");
+
+    if (user) {
+      // Update googleId if not set (e.g. user previously registered with email/password)
+      if (!user.googleId) {
+        user.googleId = googleId;
+      }
+      if (picture && user.profilePicture === "default.jpg") {
+        user.profilePicture = picture;
+      }
+      user.token = token;
+      await user.save();
+    } else {
+      // Create new user + profile
+      const username = email.split("@")[0] + "_" + crypto.randomBytes(3).toString("hex");
+      user = new User({
+        name: name || email.split("@")[0],
+        email,
+        username,
+        googleId,
+        profilePicture: picture || "default.jpg",
+        token,
+        password: "",
+      });
+      await user.save();
+
+      const profile = new Profile({ userId: user._id });
+      await profile.save();
+    }
+
+    return res.json({ token });
+  } catch (error) {
+    console.error("Google OAuth error:", error);
+    return res.status(500).json({ message: error.message || "Google authentication failed" });
+  }
+};
+export const updateContact = async (req, res) => {
+  try {
+    const { token, phone, alternateEmail, address, linkedin, github, twitter, website } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ message: "Token is required" });
+    }
+
+    const user = await User.findOne({ token });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    let contact = await Contact.findOne({ userId: user._id });
+    
+    if (!contact) {
+      contact = new Contact({ userId: user._id });
+    }
+
+    if (phone !== undefined) contact.phone = phone;
+    if (alternateEmail !== undefined) contact.alternateEmail = alternateEmail;
+    if (address !== undefined) contact.address = address;
+    if (linkedin !== undefined) contact.linkedin = linkedin;
+    if (github !== undefined) contact.github = github;
+    if (twitter !== undefined) contact.twitter = twitter;
+    if (website !== undefined) contact.website = website;
+
+    await contact.save();
+    return res.json({ message: "Contact updated", contact });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const getMyContact = async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({ message: "Token is required" });
+    }
+
+    const user = await User.findOne({ token });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const contact = await Contact.findOne({ userId: user._id });
+    return res.json({ contact: contact || {} });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const getContactForUser = async (req, res) => {
+  try {
+    const { token, userId } = req.query;
+
+    if (!token || !userId) {
+      return res.status(400).json({ message: "Token and userId are required" });
+    }
+
+    const currentUser = await User.findOne({ token });
+    if (!currentUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if they are connected (either direction, status_accepted = true)
+    const connection = await ConnectionRequest.findOne({
+      $or: [
+        { userId: currentUser._id, connectionId: userId, status_accepted: true },
+        { userId: userId, connectionId: currentUser._id, status_accepted: true },
+      ],
+    });
+
+    if (!connection) {
+      return res.status(403).json({ message: "You must be connected to view contact details" });
+    }
+
+    const contact = await Contact.findOne({ userId });
+    return res.json({ contact: contact || {} });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

@@ -1,4 +1,4 @@
-import { Router } from "express";
+﻿import { Router } from "express";
 import {
   login,
   register,
@@ -13,6 +13,12 @@ import {
   acceptConnectionRequest,
   getMyConnections,
   getUserProfileAndUserBasedOnUsername,
+  addSpecialisation,
+  removeSpecialisation,
+  googleLogin,
+  updateContact,
+  getMyContact,
+  getContactForUser,
 } from "../controllers/user.controller.js";
 import multer from "multer";
 
@@ -40,5 +46,12 @@ router.route("/user/accept_connection_request").post(acceptConnectionRequest);
 router
   .route("/user/get_profile_based_on_username")
   .get(getUserProfileAndUserBasedOnUsername);
+router.route("/user/add_specialisation").post(addSpecialisation);
+router.route("/user/remove_specialisation").post(removeSpecialisation);
 
+router.route("/auth/google").post(googleLogin);
+
+router.route("/user/update_contact").post(updateContact);
+router.route("/user/get_my_contact").get(getMyContact);
+router.route("/user/get_contact").get(getContactForUser);
 export default router;

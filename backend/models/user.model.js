@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+﻿import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -22,7 +22,8 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: false,
+    default: "",
   },
   profilePicture: {
     type: String,
@@ -33,6 +34,10 @@ const userSchema = new mongoose.Schema({
     default: Date.now,
   },
   token: {
+    type: String,
+    default: "",
+  },
+  googleId: {
     type: String,
     default: "",
   },

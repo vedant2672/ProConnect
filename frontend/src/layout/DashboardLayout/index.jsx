@@ -79,6 +79,25 @@ export default function DashboardLayout({ children }) {
         </svg>
       ),
     },
+    {
+      label: "Specialisations",
+      route: "/specialisations",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={1.5}
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9.813 15.904 9 18.75l-1.313-3.844A4.5 4.5 0 0 1 4.5 12.75V6a4.5 4.5 0 0 1 4.5-4.5h6a4.5 4.5 0 0 1 4.5 4.5v6.75a4.5 4.5 0 0 1-3.188 4.156L15 18.75l-.813-2.846m-4.374 0h4.374"
+          />
+        </svg>
+      ),
+    },
   ];
 
   return (

@@ -199,26 +199,29 @@ export default function MyConnectionsPage() {
               <p className={styles.emptyText}>No matches found.</p>
             )}
             <div className={styles.grid}>
-              {filteredConnections.map((conn) => (
-                <div
-                  key={conn._id}
-                  className={styles.networkCard}
-                  onClick={() =>
-                    router.push(`/view_profile/${conn.user.username}`)
-                  }
-                >
-                  <div className={styles.networkAvatar}>
-                    <img
-                      src={resolveImageUrl(conn.user.profilePicture)}
-                      alt={conn.user.name + " profile"}
-                    />
+              {filteredConnections.map((conn) => {
+                if (!conn.user) return null;
+                return (
+                  <div
+                    key={conn._id}
+                    className={styles.networkCard}
+                    onClick={() =>
+                      router.push(`/view_profile/${conn.user.username}`)
+                    }
+                  >
+                    <div className={styles.networkAvatar}>
+                      <img
+                        src={resolveImageUrl(conn.user.profilePicture)}
+                        alt={conn.user.name + " profile"}
+                      />
+                    </div>
+                    <h5 className={styles.networkName}>{conn.user.name}</h5>
+                    <p className={styles.networkUsername}>
+                      @{conn.user.username}
+                    </p>
                   </div>
-                  <h5 className={styles.networkName}>{conn.user.name}</h5>
-                  <p className={styles.networkUsername}>
-                    @{conn.user.username}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         </div>
@@ -226,3 +229,5 @@ export default function MyConnectionsPage() {
     </UserLayout>
   );
 }
+
+

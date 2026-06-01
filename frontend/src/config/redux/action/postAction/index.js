@@ -9,7 +9,9 @@ export const getAllPosts = createAsyncThunk(
 
       return thunkAPI.fulfillWithValue(reponse.data);
     } catch (err) {
-      return thunkAPI.rejectWithValue(err.response.data);
+      return thunkAPI.rejectWithValue(
+        err.response?.data || { message: "Failed to fetch posts" }
+      );
     }
   }
 );
@@ -36,7 +38,9 @@ export const createPost = createAsyncThunk(
         return thunkAPI.rejectWithValue("Post not uploaded");
       }
     } catch (error) {
-      return thunkAPI.rejectWithValue(error.response.data);
+      return thunkAPI.rejectWithValue(
+        error.response?.data || { message: "Post not uploaded" }
+      );
     }
   }
 );
@@ -70,7 +74,9 @@ export const incrementPostLike = createAsyncThunk(
 
       return thunkAPI.fulfillWithValue(response.data);
     } catch (error) {
-      return thunkAPI.rejectWithValue(error.response.data.message);
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to like post"
+      );
     }
   }
 );
@@ -90,7 +96,9 @@ export const getAllComments = createAsyncThunk(
         post_id: postData.post_id,
       });
     } catch (error) {
-      return thunkAPI.rejectWithValue(error.response.data);
+      return thunkAPI.rejectWithValue(
+        error.response?.data || { message: "Failed to fetch comments" }
+      );
     }
   }
 );
@@ -112,7 +120,12 @@ export const postComment = createAsyncThunk(
 
       return thunkAPI.fulfillWithValue(response.data); 
     } catch (error) {
-      return thunkAPI.rejectWithValue(error.response.data);
+      return thunkAPI.rejectWithValue(
+        error.response?.data || { message: "Failed to post comment" }
+      );
     }
   }
 );
+
+
+

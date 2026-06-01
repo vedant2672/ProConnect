@@ -23,6 +23,7 @@ export default function ViewProfilePage({ userProfile }) {
   const [isCurrentUserInConnection, setIsCurrentUserInConnection] =
     useState(false);
   const [isConnectionAccepted, setIsConnectionAccepted] = useState(false);
+  const [contactInfo, setContactInfo] = useState(null);
 
   // Load posts + connection context
   useEffect(() => {
@@ -49,13 +50,17 @@ export default function ViewProfilePage({ userProfile }) {
 
   // Determine connection state
   useEffect(() => {
-    const targetId = userProfile.userId._id;
+    const targetId = userProfile?.userId?._id;
+    if (!targetId) return;
 
-    const acceptedFromConnections = authState.connections.find(
-      (u) => u.connectionId._id === targetId
+    const connections = authState.connections || [];
+    const requests = authState.connectionRequest || [];
+
+    const acceptedFromConnections = connections.find(
+      (u) => u?.connectionId?._id === targetId
     );
-    const acceptedFromRequests = authState.connectionRequest.find(
-      (u) => u.userId._id === targetId
+    const acceptedFromRequests = requests.find(
+      (u) => u?.userId?._id === targetId
     );
 
     if (acceptedFromConnections) {
@@ -71,11 +76,31 @@ export default function ViewProfilePage({ userProfile }) {
   }, [
     authState.connections,
     authState.connectionRequest,
-    userProfile.userId._id,
+    userProfile?.userId?._id,
   ]);
+
+  // Fetch contact info if connected
+  useEffect(() => {
+    const targetId = userProfile?.userId?._id;
+    if (!isConnectionAccepted || !targetId) return;
+    (async () => {
+      try {
+        const res = await clientServer.get("/user/get_contact", {
+          params: {
+            token: localStorage.getItem("token"),
+            userId: targetId,
+          },
+        });
+        setContactInfo(res.data.contact);
+      } catch (e) {
+        // 403 expected if not connected; ignore silently
+      }
+    })();
+  }, [isConnectionAccepted, userProfile?.userId?._id]);
 
   const workItems = userProfile.pastWork || [];
   const educationItems = userProfile.education || [];
+  const specialisationItems = userProfile.specialisations || [];
 
   const stats = useMemo(
     () => [
@@ -121,6 +146,17 @@ export default function ViewProfilePage({ userProfile }) {
                 </span>
               )}
             </div>
+
+            {specialisationItems.length > 0 && (
+              <div className={styles.specRow}>
+                {specialisationItems.map((spec) => (
+                  <span key={spec._id} className={styles.specPill}>
+                    {spec.name}
+                  </span>
+                ))}
+              </div>
+            )}
+
             <div className={styles.actionsRow}>
               {!isCurrentUserInConnection && (
                 <button
@@ -273,6 +309,36 @@ export default function ViewProfilePage({ userProfile }) {
                   ))}
                 </ol>
               </div>
+              {isConnectionAccepted && contactInfo && (
+                <div className={styles.infoSection} aria-labelledby="contact-heading">
+                  <h2 id="contact-heading" className={styles.sectionTitle}>
+                    Contact Info
+                  </h2>
+                  <ul className={styles.contactList}>
+                    {contactInfo.phone && (
+                      <li><strong>Phone:</strong> {contactInfo.phone}</li>
+                    )}
+                    {contactInfo.alternateEmail && (
+                      <li><strong>Email:</strong> {contactInfo.alternateEmail}</li>
+                    )}
+                    {contactInfo.address && (
+                      <li><strong>Address:</strong> {contactInfo.address}</li>
+                    )}
+                    {contactInfo.linkedin && (
+                      <li><strong>LinkedIn:</strong> <a href={contactInfo.linkedin} target="_blank" rel="noreferrer">{contactInfo.linkedin}</a></li>
+                    )}
+                    {contactInfo.github && (
+                      <li><strong>GitHub:</strong> <a href={contactInfo.github} target="_blank" rel="noreferrer">{contactInfo.github}</a></li>
+                    )}
+                    {contactInfo.twitter && (
+                      <li><strong>Twitter:</strong> <a href={contactInfo.twitter} target="_blank" rel="noreferrer">{contactInfo.twitter}</a></li>
+                    )}
+                    {contactInfo.website && (
+                      <li><strong>Website:</strong> <a href={contactInfo.website} target="_blank" rel="noreferrer">{contactInfo.website}</a></li>
+                    )}
+                  </ul>
+                </div>
+              )}
             </aside>
           </div>
         </div>

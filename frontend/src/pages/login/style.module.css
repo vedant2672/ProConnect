@@ -335,3 +335,73 @@
     border: 1px solid #f3d8e4;
   }
 }
+
+/* Divider */
+.dividerRow {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background: #e6d2db;
+}
+.dividerText {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #9a8291;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Google Button */
+.googleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.85rem 1.2rem;
+  border-radius: 14px;
+  border: 1.5px solid #e6d2db;
+  background: #fff;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #3c4043;
+  cursor: pointer;
+  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+  letter-spacing: 0.3px;
+}
+.googleBtn:hover {
+  background: #f8f4f6;
+  border-color: #b12167;
+  box-shadow: 0 2px 12px -4px rgba(177, 33, 103, 0.2);
+}
+.googleBtn:active {
+  transform: scale(0.99);
+}
+.googleIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* Welcome text styles */
+.welcomeTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  text-align: center;
+  background: linear-gradient(135deg, #b12167, #d8476d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.welcomeSubtitle {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0 0 2rem 0;
+  text-align: center;
+}

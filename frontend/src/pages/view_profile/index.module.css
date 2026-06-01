@@ -382,3 +382,47 @@
     gap: 1.6rem;
   }
 }
+
+/* Specialisation Pills */
+.specRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.specPill {
+  display: inline-block;
+  background: linear-gradient(135deg, rgba(177, 33, 103, 0.15), rgba(216, 71, 109, 0.1));
+  border: 1px solid rgba(177, 33, 103, 0.25);
+  color: #b12167;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+}
+
+/* Contact Info Section */
+.contactList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.contactList li {
+  font-size: 0.75rem;
+  color: #333;
+  word-break: break-word;
+}
+.contactList strong {
+  color: #b12167;
+  margin-right: 0.4rem;
+}
+.contactList a {
+  color: #b12167;
+  text-decoration: none;
+}
+.contactList a:hover {
+  text-decoration: underline;
+}

@@ -58,7 +58,10 @@ const authSlice = createSlice({
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
-        state.message = action.payload.message;
+        state.message =
+          action.payload?.message ||
+          action.error?.message ||
+          "Login failed";
       })
       .addCase(registerUser.pending, (state) => {
         state.isLoading = true;
@@ -75,31 +78,43 @@ const authSlice = createSlice({
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
-        state.message = action.payload;
+        state.message =
+          action.payload?.message ||
+          action.payload ||
+          action.error?.message ||
+          "Request failed";
       })
       .addCase(getAboutUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isError = false;
         state.profileFetched = true;
-        state.user = action.payload.profile;
+        state.user = action.payload?.profile;
       })
       .addCase(getAllUsers.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isError = false;
         state.all_profiles_fetched = true;
-        state.all_users = action.payload.profiles;
+        state.all_users = action.payload?.profiles || [];
       })
       .addCase(getConnectionsRequest.fulfilled, (state, action) => {
         state.connections = action.payload;
       })
       .addCase(getConnectionsRequest.rejected, (state, action) => {
-        state.message = action.payload;
+        state.message =
+          action.payload?.message ||
+          action.payload ||
+          action.error?.message ||
+          "Request failed";
       })
       .addCase(getMyConnectionRequests.fulfilled, (state, action) => {
         state.connectionRequest = action.payload;
       })
       .addCase(getMyConnectionRequests.rejected, (state, action) => {
-        state.message = action.payload;
+        state.message =
+          action.payload?.message ||
+          action.payload ||
+          action.error?.message ||
+          "Request failed";
       });
   },
 });

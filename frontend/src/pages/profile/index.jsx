@@ -1,4 +1,4 @@
-import { getAboutUser } from "@/config/redux/action/authAction";
+﻿import { getAboutUser } from "@/config/redux/action/authAction";
 import DashboardLayout from "@/layout/DashboardLayout";
 import UserLayout from "@/layout/UserLayout";
 import React, { useEffect, useMemo, useState } from "react";
@@ -16,12 +16,11 @@ export default function ProfilePage() {
   const [userPosts, setUserPosts] = useState([]);
   const [initialSnapshot, setInitialSnapshot] = useState(null);
   const [saving, setSaving] = useState(false);
-  // Reverted: no tabbed interface
 
   const dispatch = useDispatch();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState(null); // 'work' | 'education' | null
+  const [modalType, setModalType] = useState(null); // 'work' | 'education' | 'specialisation' | null
 
   const [workInput, setWorkInput] = useState({
     company: "",
@@ -35,6 +34,14 @@ export default function ProfilePage() {
     fieldOfStudy: "",
     years: "",
   });
+
+  const [specInput, setSpecInput] = useState("");
+
+  const [contact, setContact] = useState({
+    phone: "", alternateEmail: "", address: "",
+    linkedin: "", github: "", twitter: "", website: "",
+  });
+  const [contactSaving, setContactSaving] = useState(false);
 
   const handleWorkChange = (e) => {
     const { name, value } = e.target;
@@ -73,9 +80,49 @@ export default function ProfilePage() {
     closeModal();
   };
 
+  const addSpecialisation = async () => {
+    if (!specInput.trim()) return;
+    try {
+      const res = await clientServer.post("/user/add_specialisation", {
+        token: localStorage.getItem("token"),
+        name: specInput.trim(),
+      });
+      setSpecInput("");
+      closeModal();
+      dispatch(getAboutUser({ token: localStorage.getItem("token") }));
+
+    } catch (e) {
+      console.error("Failed to add specialisation", e);
+    }
+  };
+
+  const removeSpecialisation = async (specId) => {
+    try {
+      await clientServer.post("/user/remove_specialisation", {
+        token: localStorage.getItem("token"),
+        specialisationId: specId,
+      });
+      dispatch(getAboutUser({ token: localStorage.getItem("token") }));
+
+    } catch (e) {
+      console.error("Failed to remove specialisation", e);
+    }
+  };
+
   useEffect(() => {
     dispatch(getAboutUser({ token: localStorage.getItem("token") }));
+
     dispatch(getAllPosts());
+
+    // Fetch contact
+    (async () => {
+      try {
+        const res = await clientServer.get("/user/get_my_contact", {
+          params: { token: localStorage.getItem("token") },
+        });
+        if (res.data.contact) setContact(res.data.contact);
+      } catch (e) {}
+    })();
   }, [dispatch]);
 
   useEffect(() => {
@@ -105,13 +152,12 @@ export default function ProfilePage() {
     );
 
     dispatch(getAboutUser({ token: localStorage.getItem("token") }));
+
   };
 
   const hasChanges = useMemo(() => {
     if (!initialSnapshot || !userProfile.userId) return false;
     try {
-      const fields = (["bio", "currentPost", "pastWork", "education"], []);
-      // Simple shallow compare relevant editable fields and name
       const orig = initialSnapshot;
       if (orig.userId.name !== userProfile.userId.name) return true;
       if ((orig.bio || "") !== (userProfile.bio || "")) return true;
@@ -145,6 +191,7 @@ export default function ProfilePage() {
         education: userProfile.education,
       });
       await dispatch(getAboutUser({ token: localStorage.getItem("token") }));
+
     } finally {
       setSaving(false);
     }
@@ -153,13 +200,11 @@ export default function ProfilePage() {
   const downloadResume = async () => {
     if (!userProfile.userId?._id) return;
     try {
-      // Fetch generated PDF name
       const res = await clientServer.get(
         `/user/download_resume?id=${userProfile.userId._id}`
       );
       const filename = res.data?.message;
       if (!filename) return;
-      // Create a temporary link to trigger download
       const url = `${BASE_URL}/${filename}`;
       const a = document.createElement("a");
       a.href = url;
@@ -172,6 +217,20 @@ export default function ProfilePage() {
     }
   };
 
+
+  const saveContact = async () => {
+    setContactSaving(true);
+    try {
+      await clientServer.post("/user/update_contact", {
+        token: localStorage.getItem("token"),
+        ...contact,
+      });
+    } catch (e) {
+      console.error("Failed to save contact", e);
+    } finally {
+      setContactSaving(false);
+    }
+  };
   return (
     <UserLayout>
       <DashboardLayout>
@@ -280,7 +339,6 @@ export default function ProfilePage() {
                       <span className={styles.statLabel}>Education</span>
                     </div>
                   </div>
-                  {/* Save Changes button moved to bottomActions */}
                   <button
                     type="button"
                     onClick={downloadResume}
@@ -304,7 +362,6 @@ export default function ProfilePage() {
                     </svg>
                     <span>Download Resume</span>
                   </button>
-                  {/* Tabs removed */}
                 </div>
                 <aside className={styles.activityCol}>
                   <h3 className={styles.sectionHeading}>Recent Activity</h3>
@@ -324,6 +381,52 @@ export default function ProfilePage() {
                     )}
                   </ul>
                 </aside>
+              </div>
+            </section>
+
+            {/* Specialisations */}
+            <section className={styles.sectionCard}>
+              <div className={styles.sectionHeader}>
+                <h4 className={styles.sectionTitle}>Specialisations</h4>
+                <button
+                  type="button"
+                  onClick={() => openModal("specialisation")}
+                  className={styles.sectionAddBtn}
+                >
+                  Add
+                </button>
+              </div>
+              <div className={styles.specTagsWrap}>
+                {(userProfile.specialisations || []).map((spec) => (
+                  <div key={spec._id} className={styles.specTag}>
+                    <span>{spec.name}</span>
+                    <button
+                      type="button"
+                      className={styles.specRemoveBtn}
+                      onClick={() => removeSpecialisation(spec._id)}
+                      aria-label={`Remove ${spec.name}`}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        width="14"
+                        height="14"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4.22 4.22a.75.75 0 0 1 1.06 0L10 8.94l4.72-4.72a.75.75 0 1 1 1.06 1.06L11.06 10l4.72 4.72a.75.75 0 1 1-1.06 1.06L10 11.06l-4.72 4.72a.75.75 0 1 1-1.06-1.06L8.94 10 4.22 5.28a.75.75 0 0 1 0-1.06Z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+                {(userProfile.specialisations || []).length === 0 && (
+                  <p className={styles.emptyInline}>
+                    No specialisations added yet.
+                  </p>
+                )}
               </div>
             </section>
 
@@ -378,6 +481,94 @@ export default function ProfilePage() {
                 )}
               </div>
             </section>
+
+            {/* Contact Details */}
+            <section className={styles.sectionCard}>
+              <div className={styles.sectionHeader}>
+                <h4 className={styles.sectionTitle}>Contact Details</h4>
+                <span className={styles.contactNote}>(Visible only to connections)</span>
+              </div>
+              <div className={styles.contactGrid}>
+                <div className={styles.contactField}>
+                  <label className={styles.contactLabel}>Phone</label>
+                  <input
+                    className={styles.inputField}
+                    type="tel"
+                    placeholder="+1 234 567 8900"
+                    value={contact.phone || ""}
+                    onChange={(e) => setContact({ ...contact, phone: e.target.value })}
+                  />
+                </div>
+                <div className={styles.contactField}>
+                  <label className={styles.contactLabel}>Alternate Email</label>
+                  <input
+                    className={styles.inputField}
+                    type="email"
+                    placeholder="alternate@email.com"
+                    value={contact.alternateEmail || ""}
+                    onChange={(e) => setContact({ ...contact, alternateEmail: e.target.value })}
+                  />
+                </div>
+                <div className={styles.contactField}>
+                  <label className={styles.contactLabel}>Address</label>
+                  <input
+                    className={styles.inputField}
+                    type="text"
+                    placeholder="City, Country"
+                    value={contact.address || ""}
+                    onChange={(e) => setContact({ ...contact, address: e.target.value })}
+                  />
+                </div>
+                <div className={styles.contactField}>
+                  <label className={styles.contactLabel}>LinkedIn</label>
+                  <input
+                    className={styles.inputField}
+                    type="url"
+                    placeholder="https://linkedin.com/in/username"
+                    value={contact.linkedin || ""}
+                    onChange={(e) => setContact({ ...contact, linkedin: e.target.value })}
+                  />
+                </div>
+                <div className={styles.contactField}>
+                  <label className={styles.contactLabel}>GitHub</label>
+                  <input
+                    className={styles.inputField}
+                    type="url"
+                    placeholder="https://github.com/username"
+                    value={contact.github || ""}
+                    onChange={(e) => setContact({ ...contact, github: e.target.value })}
+                  />
+                </div>
+                <div className={styles.contactField}>
+                  <label className={styles.contactLabel}>Twitter / X</label>
+                  <input
+                    className={styles.inputField}
+                    type="url"
+                    placeholder="https://twitter.com/username"
+                    value={contact.twitter || ""}
+                    onChange={(e) => setContact({ ...contact, twitter: e.target.value })}
+                  />
+                </div>
+                <div className={styles.contactField}>
+                  <label className={styles.contactLabel}>Website</label>
+                  <input
+                    className={styles.inputField}
+                    type="url"
+                    placeholder="https://yourwebsite.com"
+                    value={contact.website || ""}
+                    onChange={(e) => setContact({ ...contact, website: e.target.value })}
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                className={styles.saveContactBtn}
+                onClick={saveContact}
+                disabled={contactSaving}
+              >
+                {contactSaving ? "Saving..." : "Save Contact Info"}
+              </button>
+            </section>
             {hasChanges && (
               <div className={styles.bottomActions}>
                 <button
@@ -406,7 +597,11 @@ export default function ProfilePage() {
             >
               <div className={styles.modalHeader}>
                 <h3 className={styles.modalTitle}>
-                  {modalType === "work" ? "Add Work" : "Add Education"}
+                  {modalType === "work"
+                    ? "Add Work"
+                    : modalType === "education"
+                    ? "Add Education"
+                    : "Add Specialisation"}
                 </h3>
                 <button
                   type="button"
@@ -414,7 +609,7 @@ export default function ProfilePage() {
                   onClick={closeModal}
                   aria-label="Close"
                 >
-                  ×
+                  Ã—
                 </button>
               </div>
               <div className={styles.modalBody}>
@@ -482,6 +677,18 @@ export default function ProfilePage() {
                     />
                   </>
                 )}
+                {modalType === "specialisation" && (
+                  <input
+                    value={specInput}
+                    onChange={(e) => setSpecInput(e.target.value)}
+                    className={styles.inputField}
+                    type="text"
+                    placeholder="e.g. Machine Learning, UI/UX Design"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") addSpecialisation();
+                    }}
+                  />
+                )}
               </div>
               <div className={styles.modalFooter}>
                 <button
@@ -507,6 +714,15 @@ export default function ProfilePage() {
                     onClick={addEducation}
                   >
                     Add Education
+                  </button>
+                )}
+                {modalType === "specialisation" && (
+                  <button
+                    type="button"
+                    className={styles.primaryBtn}
+                    onClick={addSpecialisation}
+                  >
+                    Add Specialisation
                   </button>
                 )}
               </div>

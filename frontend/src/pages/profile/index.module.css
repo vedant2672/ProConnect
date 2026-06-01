@@ -770,3 +770,98 @@
 /* old modal removed */
 
 /* inputField redefined above for new modal */
+
+/* Specialisation Tags */
+.specTagsWrap {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.specTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: linear-gradient(120deg, #fce8f2, #fff5f9);
+  border: 1px solid #f3d8e4;
+  padding: 0.45rem 0.55rem 0.45rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: #7a2d4b;
+  transition: background 0.3s, box-shadow 0.3s, transform 0.3s;
+}
+.specTag:hover {
+  background: linear-gradient(120deg, #ffe0ef, #fff0f7);
+  box-shadow: 0 4px 14px -6px rgba(177, 33, 103, 0.25);
+  transform: translateY(-1px);
+}
+.specRemoveBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #c44a7a;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  transition: background 0.25s, color 0.25s;
+}
+.specRemoveBtn:hover {
+  background: rgba(177, 33, 103, 0.15);
+  color: #a01854;
+}
+
+/* Contact Section */
+.contactNote {
+  font-size: 0.65rem;
+  color: #9a8291;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.contactGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.contactField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.contactLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #6a5162;
+}
+
+.saveContactBtn {
+  background: linear-gradient(120deg, #b12167, #d8476d, #ffb37a);
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px -4px rgba(177, 33, 103, 0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.saveContactBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px -6px rgba(177, 33, 103, 0.5);
+}
+.saveContactBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

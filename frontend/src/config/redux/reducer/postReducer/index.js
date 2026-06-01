@@ -37,7 +37,10 @@ const postSlice = createSlice({
         state.isLoading = false;
         state.isError = true;
         state.postFetched = false;
-        state.message = action.payload.message;
+        state.message =
+          action.payload?.message ||
+          action.error?.message ||
+          "Failed to fetch posts";
       })
       .addCase(getAllComments.fulfilled, (state, action) => {
         state.postId = action.payload.post_id;
@@ -49,3 +52,4 @@ const postSlice = createSlice({
 export const { resetPostId } = postSlice.actions;
 
 export default postSlice.reducer;
+
