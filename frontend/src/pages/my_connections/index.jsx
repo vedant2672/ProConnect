@@ -123,23 +123,23 @@ export default function MyConnectionsPage() {
                   role="button"
                   tabIndex={0}
                   onClick={() =>
-                    router.push(`/view_profile/${req.userId.username}`)
+                    router.push(`/view_profile/${req.userId?.username}`)
                   }
                   onKeyDown={(e) => {
                     if (e.key === "Enter")
-                      router.push(`/view_profile/${req.userId.username}`);
+                      router.push(`/view_profile/${req.userId?.username}`);
                   }}
                 >
                   <div className={styles.avatarWrapper}>
                     <img
-                      src={resolveImageUrl(req.userId.profilePicture)}
-                      alt={req.userId.name + " profile picture"}
+                      src={resolveImageUrl(req.userId?.profilePicture)}
+                      alt={req.userId?.name + " profile picture"}
                       className={styles.avatarImg}
                     />
                   </div>
                   <div className={styles.userInfo}>
-                    <h4>{req.userId.name}</h4>
-                    <p>@{req.userId.username}</p>
+                    <h4>{req.userId?.name}</h4>
+                    <p>@{req.userId?.username}</p>
                   </div>
                   <div className={styles.requestActions}>
                     <button

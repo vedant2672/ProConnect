@@ -159,7 +159,7 @@ export default function ProfilePage() {
     if (!initialSnapshot || !userProfile.userId) return false;
     try {
       const orig = initialSnapshot;
-      if (orig.userId.name !== userProfile.userId.name) return true;
+      if (orig.userId.name !== userProfile.userId?.name) return true;
       if ((orig.bio || "") !== (userProfile.bio || "")) return true;
       const pwChanged =
         JSON.stringify(orig.pastWork || []) !==
@@ -181,7 +181,7 @@ export default function ProfilePage() {
     try {
       await clientServer.post("/user_update", {
         token: localStorage.getItem("token"),
-        name: userProfile.userId.name,
+        name: userProfile.userId?.name,
       });
       await clientServer.post("/update_profile_data", {
         token: localStorage.getItem("token"),
@@ -201,14 +201,14 @@ export default function ProfilePage() {
     if (!userProfile.userId?._id) return;
     try {
       const res = await clientServer.get(
-        `/user/download_resume?id=${userProfile.userId._id}`
+        `/user/download_resume?id=${userProfile.userId?._id}`
       );
       const filename = res.data?.message;
       if (!filename) return;
       const url = `${BASE_URL}/${filename}`;
       const a = document.createElement("a");
       a.href = url;
-      a.download = `resume_${userProfile.userId.username}.pdf`;
+      a.download = `resume_${userProfile.userId?.username}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -271,7 +271,7 @@ export default function ProfilePage() {
                     accept="image/*"
                   />
                   <img
-                    src={resolveImageUrl(userProfile.userId.profilePicture)}
+                    src={resolveImageUrl(userProfile.userId?.profilePicture)}
                     alt="Profile avatar"
                     className={styles.avatarImg}
                   />
@@ -288,7 +288,7 @@ export default function ProfilePage() {
                     <input
                       className={styles.nameInput}
                       type="text"
-                      value={userProfile.userId.name}
+                      value={userProfile.userId?.name}
                       onChange={(e) =>
                         setUserProfile({
                           ...userProfile,
@@ -301,7 +301,7 @@ export default function ProfilePage() {
                       aria-label="Edit your name"
                     />
                     <span className={styles.handle}>
-                      @{userProfile.userId.username}
+                      @{userProfile.userId?.username}
                     </span>
                   </div>
                   <div className={styles.bioBlock}>

@@ -143,19 +143,19 @@ export default function DashboardLayout({ children }) {
               className={styles.profileCard}
               type="button"
               onClick={() =>
-                router.push(`/view_profile/${profile.userId.username}`)
+                router.push(`/view_profile/${profile.userId?.username}`)
               }
             >
               <img
-                src={resolveImageUrl(profile.userId.profilePicture)}
+                src={resolveImageUrl(profile.userId?.profilePicture)}
                 alt=""
                 className={styles.profileAvatar}
                 loading="lazy"
               />
               <div className={styles.profileMeta}>
-                <p className={styles.profileName}>{profile.userId.name}</p>
+                <p className={styles.profileName}>{profile.userId?.name}</p>
                 <p className={styles.profileHandle}>
-                  @{profile.userId.username}
+                  @{profile.userId?.username}
                 </p>
               </div>
             </button>

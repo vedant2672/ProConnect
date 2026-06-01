@@ -67,7 +67,7 @@ function dashboard() {
             <div className={styles.composeAvatarSection}>
               <img
                 className={styles.composeAvatar}
-                src={resolveImageUrl(authState.user.userId.profilePicture)}
+                src={resolveImageUrl(authState.user?.userId?.profilePicture)}
                 alt="Your profile picture"
               />
             </div>
@@ -140,16 +140,16 @@ function dashboard() {
                   <header className={styles.postHeader}>
                     <img
                       className={styles.postAvatar}
-                      src={resolveImageUrl(post.userId.profilePicture)}
-                      alt={`${post.userId.name} avatar`}
+                      src={resolveImageUrl(post.userId?.profilePicture)}
+                      alt={`${post.userId?.name} avatar`}
                     />
                     <div className={styles.postMeta}>
-                      <p className={styles.postAuthor}>{post.userId.name}</p>
+                      <p className={styles.postAuthor}>{post.userId?.name}</p>
                       <p className={styles.postHandle}>
-                        @{post.userId.username}
+                        @{post.userId?.username}
                       </p>
                     </div>
-                    {post.userId._id === authState.user.userId._id && (
+                    {post.userId?._id === authState.user?.userId?._id && (
                       <button
                         className={styles.deleteBtn}
                         aria-label="Delete post"
@@ -288,10 +288,10 @@ function dashboard() {
                       <li key={comment._id} className={styles.commentItem}>
                         <div className={styles.commentBody}>
                           <p className={styles.commentAuthor}>
-                            {comment.userId.name}
+                            {comment.userId?.name}
                           </p>
                           <p className={styles.commentHandle}>
-                            @{comment.userId.username}
+                            @{comment.userId?.username}
                           </p>
                           <p className={styles.commentText}>{comment.body}</p>
                         </div>

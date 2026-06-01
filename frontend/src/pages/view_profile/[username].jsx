@@ -120,8 +120,8 @@ export default function ViewProfilePage({ userProfile }) {
             <div className={styles.bannerOverlay} />
             <div className={styles.avatarWrapper}>
               <img
-                src={resolveImageUrl(userProfile.userId.profilePicture)}
-                alt={`${userProfile.userId.name} avatar`}
+                src={resolveImageUrl(userProfile.userId?.profilePicture)}
+                alt={`${userProfile.userId?.name} avatar`}
                 className={styles.avatarImg}
               />
             </div>
@@ -130,9 +130,9 @@ export default function ViewProfilePage({ userProfile }) {
           {/* Header / Identity */}
           <header className={styles.headerBlock}>
             <div className={styles.nameRow}>
-              <h1 className={styles.name}>{userProfile.userId.name}</h1>
+              <h1 className={styles.name}>{userProfile.userId?.name}</h1>
               <span className={styles.username}>
-                @{userProfile.userId.username}
+                @{userProfile.userId?.username}
               </span>
               {isCurrentUserInConnection && (
                 <span
@@ -165,7 +165,7 @@ export default function ViewProfilePage({ userProfile }) {
                     dispatch(
                       sendConnectionRequest({
                         token: localStorage.getItem("token"),
-                        userId: userProfile.userId._id,
+                        userId: userProfile.userId?._id,
                       })
                     )
                   }
@@ -190,7 +190,7 @@ export default function ViewProfilePage({ userProfile }) {
                 className={styles.resumeBtn}
                 onClick={async () => {
                   const response = await clientServer.get(
-                    `/user/download_resume?id=${userProfile.userId._id}`
+                    `/user/download_resume?id=${userProfile.userId?._id}`
                   );
                   window.open(`${BASE_URL}/${response.data.message}`, "_blank");
                 }}

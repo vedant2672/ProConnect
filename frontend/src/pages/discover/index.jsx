@@ -21,14 +21,14 @@ export default function discover() {
   }, [authState.all_profiles_fetched, dispatch]);
 
   const filteredUsers = useMemo(() => {
-    let list = authState.all_users || [];
+    let list = (authState.all_users || []).filter(u => u && u.userId);
     if (query.trim()) {
       const q = query.toLowerCase();
       list = list.filter((u) => {
         const specNames = (u.specialisations || [])
           .map((s) => s.name)
           .join(" ");
-        return [u.userId.name, u.userId.username, specNames].some((v) =>
+        return [u.userId?.name, u.userId?.username, specNames].some((v) =>
           v?.toLowerCase().includes(q)
         );
       });
@@ -103,23 +103,23 @@ export default function discover() {
                       type="button"
                       className={styles.userCardBtn}
                       onClick={() =>
-                        router.push(`/view_profile/${user.userId.username}`)
+                        router.push(`/view_profile/${user.userId?.username}`)
                       }
-                      aria-label={`View profile of ${user.userId.name}`}
+                      aria-label={`View profile of ${user.userId?.name}`}
                     >
                       <span className={styles.avatarWrap}>
                         <img
-                          src={resolveImageUrl(user.userId.profilePicture)}
+                          src={resolveImageUrl(user.userId?.profilePicture)}
                           alt=""
                           loading="lazy"
                         />
                       </span>
                       <span className={styles.userMeta}>
                         <span className={styles.userName}>
-                          {user.userId.name}
+                          {user.userId?.name}
                         </span>
                         <span className={styles.userHandle}>
-                          @{user.userId.username}
+                          @{user.userId?.username}
                         </span>
                         {(user.specialisations || []).length > 0 && (
                           <span className={styles.userSpecialisation}>

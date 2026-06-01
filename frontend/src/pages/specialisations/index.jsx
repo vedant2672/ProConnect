@@ -143,18 +143,18 @@ export default function specialisations() {
                       type="button"
                       className={styles.profileCardBtn}
                       onClick={() =>
-                        router.push(`/view_profile/${profile.userId.username}`)
+                        router.push(`/view_profile/${profile.userId?.username}`)
                       }
                     >
                       <img
-                        src={resolveImageUrl(profile.userId.profilePicture)}
+                        src={resolveImageUrl(profile.userId?.profilePicture)}
                         alt=""
                         className={styles.avatar}
                         loading="lazy"
                       />
                       <span className={styles.meta}>
-                        <span className={styles.name}>{profile.userId.name}</span>
-                        <span className={styles.handle}>@{profile.userId.username}</span>
+                        <span className={styles.name}>{profile.userId?.name}</span>
+                        <span className={styles.handle}>@{profile.userId?.username}</span>
                       </span>
                     </button>
                   </li>
