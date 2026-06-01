@@ -206,18 +206,18 @@ export default function MyConnectionsPage() {
                     key={conn._id}
                     className={styles.networkCard}
                     onClick={() =>
-                      router.push(`/view_profile/${conn.user.username}`)
+                      router.push(`/view_profile/${conn.user?.username}`)
                     }
                   >
                     <div className={styles.networkAvatar}>
                       <img
-                        src={resolveImageUrl(conn.user.profilePicture)}
-                        alt={conn.user.name + " profile"}
+                        src={resolveImageUrl(conn.user?.profilePicture)}
+                        alt={conn.user?.name + " profile"}
                       />
                     </div>
-                    <h5 className={styles.networkName}>{conn.user.name}</h5>
+                    <h5 className={styles.networkName}>{conn.user?.name}</h5>
                     <p className={styles.networkUsername}>
-                      @{conn.user.username}
+                      @{conn.user?.username}
                     </p>
                   </div>
                 );
