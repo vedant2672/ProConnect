@@ -1,8 +1,9 @@
 import axios from "axios";
 
-// export const BASE_URL = "https://proconnect-b8ci.onrender.com";
+const rawApiBaseUrl =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "https://proconnect-b8ci.onrender.com";
 
-export const BASE_URL = "http://localhost:9090";
+export const BASE_URL = rawApiBaseUrl.replace(/\/$/, "");
 
 export const clientServer = axios.create({
   baseURL: BASE_URL,
@@ -10,6 +11,6 @@ export const clientServer = axios.create({
 
 export const resolveImageUrl = (val) => {
   if (!val) return `${BASE_URL}/default.jpg`;
-  if (/^https?:\/\//i.test(val)) return val; // already a full URL (Cloudinary)
-  return `${BASE_URL}/${encodeURIComponent(val)}`; // legacy local file
+  if (/^https?:\/\//i.test(val)) return val;
+  return `${BASE_URL}/${encodeURIComponent(val)}`;
 };

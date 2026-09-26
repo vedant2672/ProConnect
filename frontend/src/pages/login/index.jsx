@@ -24,17 +24,17 @@ function LoginComponent() {
     if (authState.loggedIn) {
       router.push("/dashboard");
     }
-  }, [authState.loggedIn]);
+  }, [authState.loggedIn, router]);
 
   useEffect(() => {
     dispatch(emptyMessage());
-  }, [userLoginMethod]);
+  }, [dispatch, userLoginMethod]);
 
   useEffect(() => {
-    if (localStorage.getItem("token")) {
+    if (typeof window !== "undefined" && window.localStorage.getItem("token")) {
       router.push("/dashboard");
     }
-  });
+  }, [router]);
 
   const validate = () => {
     const errs = {};
@@ -67,13 +67,22 @@ function LoginComponent() {
       alert("Google Client ID not configured. Please set NEXT_PUBLIC_GOOGLE_CLIENT_ID in .env.local");
       return;
     }
-    const redirectUri = encodeURIComponent("http://localhost:3000/auth/google/callback");
+
+    const appOrigin =
+      typeof window !== "undefined" && window.location?.origin
+        ? window.location.origin
+        : process.env.NEXT_PUBLIC_APP_URL || "https://pro-connect-teal.vercel.app";
+
+    const redirectUri = encodeURIComponent(`${appOrigin}/auth/google/callback`);
     const scope = encodeURIComponent("openid email profile");
     const url =
       `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}` +
       `&redirect_uri=${redirectUri}&response_type=code&scope=${scope}` +
       `&access_type=offline&prompt=consent`;
-    window.location.href = url;
+
+    if (typeof window !== "undefined") {
+      window.location.href = url;
+    }
   };
 
   const statusMessage =
